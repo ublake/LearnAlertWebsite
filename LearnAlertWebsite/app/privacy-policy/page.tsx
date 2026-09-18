@@ -111,6 +111,6 @@ export default function PrivacyPolicy() {
         </ul>
       </section>
     </main>
-    <footer><span>LearnAlert</span><span className="footer-links"><a className="footer-link" href="/terms-and-conditions">Terms &amp; Conditions</a><a className="footer-link" href="/">Back to home</a></span></footer>
+    <footer><span>LearnAlert</span><span className="footer-links"><a className="footer-link" href="/terms">Terms &amp; Conditions</a><a className="footer-link" href="/">Back to home</a></span></footer>
   </div>;
 }

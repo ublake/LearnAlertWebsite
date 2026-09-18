@@ -42,7 +42,7 @@ export default function Home() {
       </header>
       <main>
         <section className="hero">
-          <div className="hero-copy"><p className="eyebrow"><span /> LEARNING, A LITTLE AT A TIME</p><h1 ref={heading} tabIndex={-1}>Study Right From<br/>Your<span>Notifications</span></h1><p className="hero-description">Pick a deck. Set a schedule. Study right from your notifications, without opening the app.</p><div className="store-badge" id="download"><img src="/app-store-badge.svg" alt="Download on the App Store" width="180" height="60" /></div><p className="platform-note">For iPhone · Launching soon</p></div>
+          <div className="hero-copy"><p className="eyebrow"><span /> LEARNING, A LITTLE AT A TIME</p><h1 ref={heading} tabIndex={-1}>Study Right From<br/>Your <span>Notifications</span></h1><p className="hero-description">Pick a deck. Set a schedule. Study right from your notifications, without opening the app.</p><div className="store-badge" id="download"><img src="/app-store-badge.svg" alt="Download on the App Store" width="180" height="60" /></div><p className="platform-note">For iPhone · Launching soon</p></div>
           <div className="app-preview" aria-label="A look inside LearnAlert">
             <figure className="preview-side"><img src="/example1.png" alt="Discover ready-made flashcard decks" width="1206" height="2622"/><figcaption>Discover</figcaption></figure>
             <figure className="preview-main"><img src="/example2.png" alt="LearnAlert decks and notification schedule" width="1206" height="2622"/><figcaption>Your rhythm.</figcaption></figure>
@@ -51,7 +51,7 @@ export default function Home() {
         </section>
         <section className="steps" aria-label="How LearnAlert works"><article><span>01</span><div><h2>Create your deck.</h2><p>Your own cards or a ready-made set.</p></div></article><article><span>02</span><div><h2>Set your schedule.</h2><p>Every hour? Find your rhythm.</p></div></article><article><span>03</span><div><h2>Hold. Answer. Carry on.</h2><p>A little learning, right in the notification.</p></div></article></section>
       </main>
-      <footer><span>LearnAlert</span><span className="footer-links"><a className="footer-link" href="/privacy-policy">Privacy Policy</a><a className="footer-link" href="/terms-and-conditions">Terms &amp; Conditions</a></span></footer>
+      <footer><span>LearnAlert</span><span className="footer-links"><a className="footer-link" href="/privacy-policy">Privacy Policy</a><a className="footer-link" href="/terms">Terms &amp; Conditions</a></span></footer>
     </div>
   </>;
 }

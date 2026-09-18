@@ -4,7 +4,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 export const metadata: Metadata = {
   title: 'Terms and Conditions — LearnAlert',
   description: 'The Terms of Service governing your use of the LearnAlert app: educational use, AI-generated content disclaimers, acceptable use, and limitation of liability.',
-  alternates: { canonical: 'https://learnalertapp.com/terms-and-conditions' },
+  alternates: { canonical: 'https://learnalertapp.com/terms' },
 };
 
 export default function TermsAndConditions() {
