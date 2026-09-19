@@ -36,17 +36,19 @@ export default function PrivacyPolicy() {
         <p>When you use the <strong>&ldquo;Import with AI&rdquo;</strong> or <strong>AI Deck Generation</strong> features, LearnAlert processes only the specific text notes, photos, or documents you explicitly paste or attach in the composer.</p>
 
         <h3>B. Sub-processors</h3>
-        <p>To generate smart flashcards and structured quizzes, submitted content is transmitted securely:</p>
+        <p>To generate smart flashcards and structured quizzes, submitted content is transmitted securely to our backend at <code>api.learnalertapp.com</code>, which forwards it to an AI provider chosen by content type:</p>
         <ul>
-          <li><strong>OpenAI, Inc. (API Tier):</strong> Used to analyze source text, diagrams, and study materials to generate interactive flashcard drafts and hints.</li>
+          <li><strong>Cheaper Inference:</strong> Processes text you paste, your chat messages, and deck refinements. Cheaper Inference is an API gateway that routes requests to underlying model providers on a zero-retention basis.</li>
+          <li><strong>OpenAI, Inc. (API Tier):</strong> Processes uploaded documents and photos, analyzing source text, tables, and diagrams to generate flashcard drafts.</li>
           <li><strong>Apple CloudKit (Optional):</strong> Provides end-to-end encrypted personal device synchronization.</li>
         </ul>
 
         <h3>C. The &ldquo;No-Training&rdquo; Guarantee</h3>
-        <p>We access AI sub-processors strictly through commercial API/Enterprise agreements. <strong>Your private notes, study materials, documents, and prompts are NOT used by OpenAI or LearnAlert to train public AI foundation models.</strong></p>
+        <p>We access AI sub-processors strictly through commercial API agreements that prohibit using your content to train public AI foundation models. <strong>Your private notes, study materials, documents, and prompts are NOT used by our AI providers or by LearnAlert to train public AI models.</strong></p>
 
-        <h3>D. Temporary Source Lifecycle</h3>
-        <p>Uploaded study source materials receive temporary identifiers that automatically expire from backend cache memory within approximately 24 hours. Generated cards remain in-memory drafts until you choose to tap <strong>&ldquo;Add Deck&rdquo;</strong> to save them to your device library.</p>
+        <h3>D. We Do Not Store Your Study Materials</h3>
+        <p>Our backend holds no database and keeps no copy of what you submit. Your notes and files exist only for the seconds it takes to process a single request, and are discarded when the response is returned. Nothing is cached or given a stored identifier. If you later ask the AI to revise a deck using the original document, your device sends that document again.</p>
+        <p>Generated cards remain in-memory drafts until you tap <strong>&ldquo;Add Deck&rdquo;</strong> to save them to your device library.</p>
 
         <p className="legal-callout"><strong>Important:</strong> Never submit passwords, financial records, health information, government identification, or other sensitive personal data for AI processing.</p>
       </section>

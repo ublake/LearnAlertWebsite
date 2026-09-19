@@ -31,7 +31,7 @@ export default function TermsAndConditions() {
       <section className="legal-section">
         <h2><span className="legal-index">02</span>Artificial Intelligence Services &amp; Disclaimer</h2>
         <ul>
-          <li>LearnAlert provides automated flashcard generation using third-party artificial intelligence models (including OpenAI).</li>
+          <li>LearnAlert provides automated flashcard generation using third-party artificial intelligence models, currently accessed through Cheaper Inference and OpenAI. Our AI providers may change; the current list is maintained in our Privacy Policy.</li>
           <li><strong>Synthetic Content &amp; Hallucinations:</strong> AI-generated flashcards, summaries, and explanations are produced algorithmically and may occasionally contain inaccuracies, incomplete facts, or unexpected formatting.</li>
           <li><strong>User Review:</strong> You are provided with full editing capabilities and are advised to review and verify all generated cards before adding them to your active study rotation. We disclaim all liability for errors or omissions in AI-generated output.</li>
         </ul>
