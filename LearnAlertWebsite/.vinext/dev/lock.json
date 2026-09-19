@@ -1,8 +1,8 @@
 {
-  "pid": 80655,
+  "pid": 23071,
   "port": 3000,
   "hostname": "localhost",
   "appUrl": "http://localhost:3000",
-  "startedAt": 1789804209413,
-  "cwd": "/Users/blake/Downloads/LearnAlertWebsite/LearnAlertWebsite/LearnAlertWebsite"
+  "startedAt": 1789814196048,
+  "cwd": "/Users/blake/Desktop/LearnAlertWebsite/LearnAlertWebsite"
 }

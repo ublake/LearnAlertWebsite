@@ -4,6 +4,40 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 type Stage = 'intro' | 'opening' | 'open';
+
+function NotificationDemo() {
+  const [paused, setPaused] = useState(false);
+  return <div className={`notification-demo${paused ? ' is-paused' : ''}`}>
+    <div className="demo-scene" role="img" aria-label="LearnAlert demo: a floating notification opens into a quiz asking which planet has the most prominent rings. Saturn is selected correctly, then the notification disappears and repeats.">
+      <div className="demo-halo" aria-hidden="true" />
+      <div className="demo-shadow" aria-hidden="true" />
+      <div className="demo-flight" aria-hidden="true">
+        <div className="demo-glass">
+          <div className="demo-header">
+            <img src="/LearnAlertLogo.png" alt="" width="38" height="38" />
+            <span>LearnAlert<span className="demo-deck">A little astronomy</span></span>
+            <span className="demo-time">now</span>
+          </div>
+          <div className="demo-summary"><div><strong>A little space for learning.</strong><p>Your next question is ready.</p></div></div>
+          <div className="demo-expansion"><div className="demo-quiz">
+            <p className="demo-question">Which planet is known for<br />its spectacular rings?</p>
+            <div className="demo-answers">
+              <div className="demo-answer"><span className="demo-letter">A</span>Jupiter<span className="demo-radio" /></div>
+              <div className="demo-answer is-correct"><span className="demo-letter">B</span>Saturn<span className="demo-radio"><svg viewBox="0 0 20 20"><path d="m5 10 3.2 3.2L15 6.5" /></svg></span><span className="demo-tap" /></div>
+              <div className="demo-answer"><span className="demo-letter">C</span>Neptune<span className="demo-radio" /></div>
+            </div>
+            <div className="demo-result"><span className="demo-thinking">A small question. A little progress.</span><span className="demo-success">Correct. See you at the next one.</span></div>
+          </div></div>
+          <div className="demo-grabber" />
+        </div>
+      </div>
+    </div>
+    <button className="demo-pause" onClick={() => setPaused(!paused)} aria-label={paused ? 'Play notification animation' : 'Pause notification animation'} aria-pressed={paused}>
+      {paused ? <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 9 6-9 6Z" /></svg> : <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10" /></svg>}
+    </button>
+  </div>;
+}
+
 export default function Home() {
   const [stage, setStage] = useState<Stage>('intro');
   const [origin, setOrigin] = useState<CSSProperties>({});
@@ -43,15 +77,10 @@ export default function Home() {
       <main>
         <section className="hero">
           <div className="hero-copy"><p className="eyebrow"><span /> LEARNING, A LITTLE AT A TIME</p><h1 ref={heading} tabIndex={-1}>Study Right From<br/>Your <span>Notifications</span></h1><p className="hero-description">Pick a deck. Set a schedule. Study right from your notifications, without opening the app.</p><div className="store-badge" id="download"><img src="/app-store-badge.svg" alt="Download on the App Store" width="180" height="60" /></div><p className="platform-note">For iPhone · Launching soon</p></div>
-          <div className="app-preview" aria-label="A look inside LearnAlert">
-            <figure className="preview-side"><img src="/example1.png" alt="Discover ready-made flashcard decks" width="1206" height="2622"/><figcaption>Discover</figcaption></figure>
-            <figure className="preview-main"><img src="/example2.png" alt="LearnAlert decks and notification schedule" width="1206" height="2622"/><figcaption>Your rhythm.</figcaption></figure>
-            <figure className="preview-side"><img src="/example3.png" alt="Review the flashcards in your deck" width="1206" height="2622"/><figcaption>Study</figcaption></figure>
-          </div>
+          {stage === 'open' && <NotificationDemo />}
         </section>
-        <section className="steps" aria-label="How LearnAlert works"><article><span>01</span><div><h2>Create your deck.</h2><p>Your own cards or a ready-made set.</p></div></article><article><span>02</span><div><h2>Set your schedule.</h2><p>Every hour? Find your rhythm.</p></div></article><article><span>03</span><div><h2>Hold. Answer. Carry on.</h2><p>A little learning, right in the notification.</p></div></article></section>
       </main>
-      <footer><span>LearnAlert</span><span className="footer-links"><a className="footer-link" href="/privacy-policy">Privacy Policy</a><a className="footer-link" href="/terms">Terms &amp; Conditions</a></span></footer>
+      <footer><span>LearnAlert</span><span className="footer-links"><a className="footer-link" href="/support">Support</a><a className="footer-link" href="/privacy-policy">Privacy Policy</a><a className="footer-link" href="/terms">Terms &amp; Conditions</a></span></footer>
     </div>
   </>;
 }

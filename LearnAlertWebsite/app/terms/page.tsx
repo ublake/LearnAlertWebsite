@@ -85,6 +85,6 @@ export default function TermsAndConditions() {
         </ul>
       </section>
     </main>
-    <footer><span>LearnAlert</span><span className="footer-links"><a className="footer-link" href="/privacy-policy">Privacy Policy</a><a className="footer-link" href="/">Back to home</a></span></footer>
+    <footer><span>LearnAlert</span><span className="footer-links"><a className="footer-link" href="/support">Support</a><a className="footer-link" href="/privacy-policy">Privacy Policy</a><a className="footer-link" href="/">Back to home</a></span></footer>
   </div>;
 }
