@@ -16,7 +16,7 @@ export default function PrivacyPolicy() {
     <main className="legal">
       <p className="eyebrow"><span /> PRIVACY</p>
       <h1>Privacy Policy</h1>
-      <p className="legal-meta">Last updated: September 16, 2026 · Official contact: <a href="mailto:contact@learnalertapp.com">contact@learnalertapp.com</a> · <a href="https://learnalertapp.com">learnalertapp.com</a></p>
+      <p className="legal-meta">Last updated: September 19, 2026 · Official contact: <a href="mailto:contact@learnalertapp.com">contact@learnalertapp.com</a> · <a href="https://learnalertapp.com">learnalertapp.com</a></p>
       <p className="legal-lede">LearnAlert (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) is designed from the ground up using a &ldquo;Privacy by Design&rdquo; framework. We believe that your personal study habits, notes, and academic materials should remain strictly under your control. This Privacy Policy explains how LearnAlert handles your data, ensures compliance with Apple App Store Guidelines (including Guideline 5.1.2(i)), and safeguards your privacy.</p>
 
       <section className="legal-section">
@@ -79,10 +79,10 @@ export default function PrivacyPolicy() {
       </section>
 
       <section className="legal-section">
-        <h2><span className="legal-index">06</span>Protection of Minors (13+ / COPPA)</h2>
+        <h2><span className="legal-index">06</span>Protection of Minors (4+ / COPPA)</h2>
         <ul>
           <li>LearnAlert is designed in compliance with the Children&rsquo;s Online Privacy Protection Act (COPPA) and international child privacy frameworks.</li>
-          <li>The app is intended for users aged 13 and older. Because LearnAlert does not require public profiles, social feeds, or direct user-to-user messaging, students can study in a private, distraction-free environment.</li>
+          <li>The app is intended for users aged 4 and older. Because LearnAlert does not require public profiles, social feeds, or direct user-to-user messaging, students can study in a private, distraction-free environment.</li>
         </ul>
       </section>
 
