@@ -16,7 +16,7 @@ export default function TermsAndConditions() {
     <main className="legal">
       <p className="eyebrow"><span /> LEGAL</p>
       <h1>Terms and Conditions</h1>
-      <p className="legal-meta">Last updated: September 16, 2026 · Official contact: <a href="mailto:contact@learnalertapp.com">contact@learnalertapp.com</a> · <a href="https://learnalertapp.com">learnalertapp.com</a></p>
+      <p className="legal-meta">Last updated: October 9, 2026 · Official contact: <a href="mailto:contact@learnalertapp.com">contact@learnalertapp.com</a> · <a href="https://learnalertapp.com">learnalertapp.com</a></p>
       <p className="legal-lede">Welcome to <strong>LearnAlert</strong>. These Terms and Conditions (&ldquo;Terms&rdquo;) govern your use of the LearnAlert mobile application and related services (collectively, the &ldquo;Service&rdquo;) operated by LearnAlert (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;). By downloading, installing, or using LearnAlert, you agree to be bound by these Terms. If you do not agree, please do not use the Service.</p>
 
       <section className="legal-section">
@@ -39,7 +39,7 @@ export default function TermsAndConditions() {
 
       <section className="legal-section">
         <h2><span className="legal-index">03</span>User Content &amp; Acceptable Use</h2>
-        <p>When uploading notes, text, documents, or photos to create decks:</p>
+        <p>When submitting materials for AI processing or publishing cards, images, and audio:</p>
         <ul>
           <li>You retain ownership of any original study materials you submit.</li>
           <li>You represent and warrant that you have the legal right to submit such materials and that your content does not violate third-party copyright, intellectual property, or trade secrets.</li>
@@ -51,6 +51,12 @@ export default function TermsAndConditions() {
             </ol>
           </li>
         </ul>
+      </section>
+
+      <section className="legal-section">
+        <h2>Community Decks</h2>
+        <p>Publishing makes your submitted deck and attachments available to other users. You retain ownership of your original content and authorize LearnAlert to store, display, and distribute that public copy to provide the community feature. Publish only content you have permission to share.</p>
+        <p>You can update or remove your public decks and delete your community account from Share a Deck. Removal blocks new downloads, but copies previously downloaded by others may remain. Users may report public decks; we may remove content that violates these Terms or suspend access for abuse.</p>
       </section>
 
       <section className="legal-section">

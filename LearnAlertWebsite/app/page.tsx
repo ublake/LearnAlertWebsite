@@ -76,7 +76,7 @@ export default function Home() {
       </header>
       <main>
         <section className="hero">
-          <div className="hero-copy"><p className="eyebrow"><span /> LEARNING, A LITTLE AT A TIME</p><h1 ref={heading} tabIndex={-1}>Study Right From<br/>Your <span>Notifications</span></h1><p className="hero-description">Pick a deck. Set a schedule. Study right from your notifications, without opening the app.</p><div className="store-badge" id="download"><img src="/app-store-badge.svg" alt="Download on the App Store" width="180" height="60" /></div><p className="platform-note">For iPhone · Launching soon</p></div>
+          <div className="hero-copy"><p className="eyebrow"><span /> LEARNING, A LITTLE AT A TIME</p><h1 ref={heading} tabIndex={-1}>Study Right From<br/>Your <span>Notifications</span></h1><p className="hero-description">Pick a deck. Set a schedule. Study right from your notifications, without opening the app.</p><a className="store-badge" id="download" href="https://apps.apple.com/us/app/learnalert-learn-from-alerts/id6813841439"><img src="/app-store-badge.svg" alt="Download on the App Store" width="180" height="60" /></a><p className="platform-note">Available now for iPhone and iPad</p></div>
           {stage === 'open' && <NotificationDemo />}
         </section>
       </main>

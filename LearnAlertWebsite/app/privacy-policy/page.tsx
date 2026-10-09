@@ -3,7 +3,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy — LearnAlert',
-  description: 'LearnAlert is built privacy-first: no accounts, on-device storage, no ads or tracking, and AI deck generation that never trains public models on your notes.',
+  description: 'How LearnAlert handles private study data, AI requests, optional community accounts, and public deck sharing.',
   alternates: { canonical: 'https://learnalertapp.com/privacy-policy' },
 };
 
@@ -16,14 +16,14 @@ export default function PrivacyPolicy() {
     <main className="legal">
       <p className="eyebrow"><span /> PRIVACY</p>
       <h1>Privacy Policy</h1>
-      <p className="legal-meta">Last updated: September 19, 2026 · Official contact: <a href="mailto:contact@learnalertapp.com">contact@learnalertapp.com</a> · <a href="https://learnalertapp.com">learnalertapp.com</a></p>
-      <p className="legal-lede">LearnAlert (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) is designed from the ground up using a &ldquo;Privacy by Design&rdquo; framework. We believe that your personal study habits, notes, and academic materials should remain strictly under your control. This Privacy Policy explains how LearnAlert handles your data, ensures compliance with Apple App Store Guidelines (including Guideline 5.1.2(i)), and safeguards your privacy.</p>
+      <p className="legal-meta">Last updated: October 9, 2026 · Official contact: <a href="mailto:contact@learnalertapp.com">contact@learnalertapp.com</a> · <a href="https://learnalertapp.com">learnalertapp.com</a></p>
+      <p className="legal-lede">LearnAlert (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) is designed from the ground up using a &ldquo;Privacy by Design&rdquo; framework. We believe that your personal study habits, notes, and academic materials should remain strictly under your control. This Privacy Policy explains private study storage, optional AI processing, and the information you choose to publish to the community.</p>
 
       <section className="legal-section">
-        <h2><span className="legal-index">01</span>Zero-Account, Local-First Architecture</h2>
+        <h2><span className="legal-index">01</span>Private Study &amp; Optional Community Accounts</h2>
         <ul>
-          <li><strong>No Mandatory Accounts:</strong> You can use LearnAlert immediately without creating an account, registering an email, or sharing personal credentials.</li>
-          <li><strong>On-Device Storage:</strong> All flashcard decks, custom categories, interval schedules, streaks, and quiz accuracies are stored locally on your device via Apple SwiftData.</li>
+          <li><strong>No Mandatory Accounts:</strong> Personal study and browsing public decks do not require an account. Publishing, reporting, and managing public decks require Sign in with Apple.</li>
+          <li><strong>On-Device Storage:</strong> Your personal decks, images, audio, schedules, and study progress are stored on your device. Course progress is shared locally between the app and its notification extension.</li>
           <li><strong>Private iCloud Sync:</strong> If iCloud is enabled on your Apple device, data syncs across your personal devices via Apple&rsquo;s private CloudKit database. LearnAlert cannot access, view, or read your private iCloud container.</li>
         </ul>
       </section>
@@ -38,16 +38,16 @@ export default function PrivacyPolicy() {
         <h3>B. Sub-processors</h3>
         <p>To generate smart flashcards and structured quizzes, submitted content is transmitted securely to our backend at <code>api.learnalertapp.com</code>, which forwards it to an AI provider chosen by content type:</p>
         <ul>
-          <li><strong>Cheaper Inference:</strong> Processes text you paste, your chat messages, and deck refinements. Cheaper Inference is an API gateway that routes requests to underlying model providers on a zero-retention basis.</li>
+          <li><strong>Cheaper Inference:</strong> Processes text you paste, your chat messages, and deck refinements. Cheaper Inference is an API gateway that routes requests to underlying model providers.</li>
           <li><strong>OpenAI, Inc. (API Tier):</strong> Processes uploaded documents and photos, analyzing source text, tables, and diagrams to generate flashcard drafts.</li>
-          <li><strong>Apple CloudKit (Optional):</strong> Provides end-to-end encrypted personal device synchronization.</li>
+          <li><strong>Apple CloudKit (Optional):</strong> Provides optional synchronization of your personal library through your private iCloud database.</li>
         </ul>
 
-        <h3>C. The &ldquo;No-Training&rdquo; Guarantee</h3>
-        <p>We access AI sub-processors strictly through commercial API agreements that prohibit using your content to train public AI foundation models. <strong>Your private notes, study materials, documents, and prompts are NOT used by our AI providers or by LearnAlert to train public AI models.</strong></p>
+        <h3>C. Use of Study Content</h3>
+        <p>LearnAlert does not use your private study materials to train AI models. We access third-party providers through their commercial APIs; their processing and retention terms also apply to requests sent to them.</p>
 
-        <h3>D. We Do Not Store Your Study Materials</h3>
-        <p>Our backend holds no database and keeps no copy of what you submit. Your notes and files exist only for the seconds it takes to process a single request, and are discarded when the response is returned. Nothing is cached or given a stored identifier. If you later ask the AI to revise a deck using the original document, your device sends that document again.</p>
+        <h3>D. AI Request Storage</h3>
+        <p>AI source documents and notes are processed for the request and are not saved as community decks automatically. Our backend stores operational request metadata, including request IDs, timestamps, provider/model names, token counts, estimated or reported costs, and error status. Request logs are retained for up to seven days. Temporary diagnostic logs may include error details. If you ask to revise a deck using the original document, your device sends that document again. Third-party providers may retain request data according to their API terms.</p>
         <p>Generated cards remain in-memory drafts until you tap <strong>&ldquo;Add Deck&rdquo;</strong> to save them to your device library.</p>
 
         <p className="legal-callout"><strong>Important:</strong> Never submit passwords, financial records, health information, government identification, or other sensitive personal data for AI processing.</p>
@@ -74,23 +74,29 @@ export default function PrivacyPolicy() {
         <h2><span className="legal-index">05</span>Device Permissions</h2>
         <ul>
           <li><strong>Notifications:</strong> Used solely to deliver local flashcard study alerts and spaced-repetition reminders based on your scheduled preferences. Alerts are scheduled and calculated directly on your device.</li>
-          <li><strong>Photos &amp; Files:</strong> Used exclusively when you choose to import an image, photo, or document into the AI deck builder. We access only the specific files you pick using native iOS file and photo selectors.</li>
+          <li><strong>Photos &amp; Files:</strong> Used when you choose files for the AI deck builder, attach images/audio to cards, or publish those attachments. We access only the specific files you pick using native iOS file and photo selectors.</li>
         </ul>
       </section>
 
       <section className="legal-section">
-        <h2><span className="legal-index">06</span>Protection of Minors (4+ / COPPA)</h2>
+        <h2><span className="legal-index">06</span>Public Community Sharing</h2>
         <ul>
-          <li>LearnAlert is designed in compliance with the Children&rsquo;s Online Privacy Protection Act (COPPA) and international child privacy frameworks.</li>
-          <li>The app is intended for users aged 4 and older. Because LearnAlert does not require public profiles, social feeds, or direct user-to-user messaging, students can study in a private, distraction-free environment.</li>
+          <li><strong>What is public:</strong> Publishing shares your deck title, description, category, cards, attached images/audio, and public handle. Other users can browse and download editable copies. Your private source documents, study history, and personal schedules are not included.</li>
+          <li><strong>Account information:</strong> We store your Apple account identifier, a public handle derived from the optional given name supplied at sign-in, and hashed sign-in sessions. We do not receive your Apple password. Sessions expire after 30 days.</li>
+          <li><strong>Storage providers:</strong> Cloudflare Workers processes API requests, D1 stores community profiles, sessions, deck snapshots, download-request counts, and reports, and R2 stores uploaded images/audio.</li>
+          <li><strong>Reports:</strong> Signed-in users may report a public deck. Reports identify the reporting account and deck and include the reason entered. Reports are reviewed by the service operator and are not public.</li>
+          <li><strong>Request limits:</strong> AI request quotas store a hashed IP identifier and request counts. Expired quota windows are removed by daily cleanup. These identifiers are used to limit abuse, not for advertising.</li>
+          <li><strong>Before publishing:</strong> Share only material you have permission to publish. Do not include private information about yourself or others. Downloaded copies may remain on other users&rsquo; devices after a public deck is removed.</li>
         </ul>
       </section>
 
       <section className="legal-section">
         <h2><span className="legal-index">07</span>Data Retention &amp; Deletion Rights</h2>
         <ul>
-          <li><strong>Instant Hard Delete:</strong> You can delete individual cards, decks, or your entire library at any time directly within the app or via <strong>Settings &gt; Manage My Data</strong>.</li>
-          <li><strong>App Removal:</strong> Uninstalling the app permanently purges all local databases and cached files from your device.</li>
+          <li><strong>Personal Library Deletion:</strong> You can delete individual cards, decks, or your entire local library through the app. Deleting a personal copy does not remove a separately published community copy; use Remove Public Deck for that.</li>
+          <li><strong>App Removal:</strong> Uninstalling removes the app&rsquo;s local data, but does not by itself delete a public community account, published decks, or copies in iCloud or device backups.</li>
+          <li><strong>Community deletion:</strong> Remove Public Deck immediately blocks public API access. Share a Deck &gt; account menu &gt; Delete Community Account deletes your community profile, sessions, reports, and public decks. Uploaded files are queued for deletion by daily cleanup; temporary failures are retried. Your personal library is retained.</li>
+          <li><strong>Unfinished uploads:</strong> Unpublished drafts and unused attachments expire after 24 hours and are removed by daily cleanup. Attached files in published decks do not have this 24-hour expiry.</li>
           <li><strong>Data Portability:</strong> You can export or modify your decks freely.</li>
         </ul>
       </section>
@@ -98,8 +104,8 @@ export default function PrivacyPolicy() {
       <section className="legal-section">
         <h2><span className="legal-index">08</span>Security &amp; Encryption Standards</h2>
         <ul>
-          <li><strong>In Transit:</strong> All communications between the app, our backend (<code>api.learnalertapp.com</code>), and AI sub-processors are encrypted using industry-standard TLS 1.3 / HTTPS encryption.</li>
-          <li><strong>At Rest:</strong> Data stored on your Apple device is protected by iOS hardware-level Data Protection (AES-256).</li>
+          <li><strong>In Transit:</strong> All communications between the app, our backend (<code>api.learnalertapp.com</code>), and AI sub-processors are protected using HTTPS.</li>
+          <li><strong>At Rest:</strong> Personal data uses iOS device protection. Community data is stored in Cloudflare D1/R2, and access to publishing and account actions is authenticated.</li>
         </ul>
       </section>
 
