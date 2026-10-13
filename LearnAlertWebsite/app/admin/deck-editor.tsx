@@ -13,12 +13,13 @@ export type EditableDeck = {
   id: string; name: string; description: string; category_tag: string;
   color_hex: string; deck_type: string; download_count: number; revision: number;
   created_at: number; updated_at: number; published_at?: number;
-  cards: EditableCard[]; status: string; admin_created: number; review_status?: string;
+  cards: EditableCard[]; status: string; admin_created: number; review_status?: string; admin_note?: string | null;
 };
 
 export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish }: { deck: EditableDeck; onSave: (body: Record<string, unknown>) => Promise<void>; onClose: () => void; onUpload: (file: File) => Promise<string>; onPublish?: (body: Record<string, unknown>) => Promise<void> }) {
   const [name, setName] = useState(deck.name);
   const [description, setDescription] = useState(deck.description);
+  const [adminNote, setAdminNote] = useState(deck.admin_note || '');
   const [category, setCategory] = useState(deck.category_tag);
   const [color, setColor] = useState(deck.color_hex);
   const [type, setType] = useState(deck.deck_type);
@@ -53,7 +54,7 @@ export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish }: { dec
     setError(''); setSaving(true);
     try {
       await (publish && onPublish ? onPublish : onSave)({ name, description, categoryTag: category, colorHex: color, deckType: type,
-        downloadCount: downloads, cards: advanced ? JSON.parse(json) : cards, expectedRevision: deck.revision });
+        downloadCount: downloads, adminNote, cards: advanced ? JSON.parse(json) : cards, expectedRevision: deck.revision });
     } catch (e) { setError((e as Error).message); }
     finally { setSaving(false); }
   }
@@ -80,6 +81,7 @@ export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish }: { dec
       {field('Deck type', type, setType, 40)}<label>Color<input type="color" value={color} onChange={e => { setColor(e.target.value); setDirty(true); }} /></label>
       <label>Downloads<input type="number" min={0} max={2147483647} step={1} required value={downloads} onChange={e => { setDownloads(Number(e.target.value)); setDirty(true); }} /></label>
     </div><label className="admin-editor-label">Description<textarea value={description} maxLength={2000} rows={3} onChange={e => { setDescription(e.target.value); setDirty(true); }} /></label>
+    <label className="admin-editor-label">Note to author (optional)<textarea value={adminNote} maxLength={1000} rows={3} placeholder="Explain your changes to the author" onChange={e => { setAdminNote(e.target.value); setDirty(true); }} /></label>
     <header><h2>Cards ({advanced ? 'JSON' : cards.length})</h2><button type="button" onClick={mode}>{advanced ? 'Card editor' : 'Edit JSON'}</button></header>
     {advanced ? <label className="admin-editor-label">Card data<textarea className="admin-json" rows={22} value={json} spellCheck={false} onChange={e => { setJSON(e.target.value); setDirty(true); }} /></label> : <>
       {cards.map((card, index) => <article className="admin-card" key={card.id}>
