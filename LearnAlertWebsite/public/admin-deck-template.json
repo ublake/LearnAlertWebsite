@@ -1,0 +1,65 @@
+{
+  "name": "Cell Biology — All Card Types",
+  "description": "Five examples covering every supported card type.",
+  "categoryTag": "Science",
+  "colorHex": "#5B70E0",
+  "deckType": "Mixed",
+  "cards": [
+    {
+      "id": "vocab-1",
+      "cardType": "vocabulary",
+      "question": "Mitochondrion",
+      "correctAnswer": "An organelle that produces most of a cell’s ATP.",
+      "hint": "Think cellular energy.",
+      "sectionName": "Cell biology"
+    },
+    {
+      "id": "reveal-1",
+      "cardType": "tap_reveal",
+      "question": "What does the nucleus do?",
+      "correctAnswer": "It stores DNA and helps control cell activities.",
+      "hint": "It contains genetic instructions.",
+      "sectionName": "Cell biology"
+    },
+    {
+      "id": "quiz-1",
+      "cardType": "multiple_choice",
+      "question": "Which structure makes proteins?",
+      "correctAnswer": "Ribosome",
+      "options": [
+        "Ribosome",
+        "Nucleus",
+        "Lysosome",
+        "Cell membrane"
+      ],
+      "hint": "It translates messenger RNA.",
+      "sectionName": "Cell biology"
+    },
+    {
+      "id": "match-1",
+      "cardType": "matching",
+      "question": "Match each cell structure to its function.",
+      "correctAnswer": "",
+      "matchingLeftItems": [
+        "Nucleus",
+        "Mitochondrion",
+        "Ribosome"
+      ],
+      "matchingRightItems": [
+        "Stores DNA",
+        "Produces ATP",
+        "Makes proteins"
+      ],
+      "hint": "Items at the same position form a pair.",
+      "sectionName": "Cell biology"
+    },
+    {
+      "id": "blank-1",
+      "cardType": "fill_blank",
+      "question": "The ___ controls what enters and leaves the cell.",
+      "correctAnswer": "cell membrane",
+      "hint": "It surrounds the cell.",
+      "sectionName": "Cell biology"
+    }
+  ]
+}

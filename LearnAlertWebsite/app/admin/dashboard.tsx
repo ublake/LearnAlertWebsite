@@ -1,0 +1,113 @@
+'use client';
+
+import { adminAPI as api, uploadAdminMedia } from './admin-client';
+import { NewDeck } from './new-deck';
+import { DeckEditor, type EditableDeck } from './deck-editor';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+
+type Row = { id?: string; name?: string; handle?: string; description?: string; category_tag?: string; status?: string; admin_hidden?: number; review_status?: string; review_message?: string; submitted_at?: number; reviewed_at?: number; revision?: number; admin_created?: number; card_count?: number; download_count?: number; report_count?: number; created_at: number; updated_at?: number; published_at?: number; deck_count?: number; profile_completed?: number; deck_id?: string; user_id?: string; reason?: string; owner_handle?: string; reporter_handle?: string; resolved_at?: number; actor?: string; action?: string; target?: string; details?: string };
+type Overview = { actor: string; decks: { total: number; published: number; hidden: number }; profiles: number; reports: number; pendingReviews: number };
+type Card = { id: string; question?: string; correctAnswer?: string; options?: string[]; promptImageID?: string; promptAudioID?: string; optionImageIDs?: (string | null)[]; matchingLeftItems?: string[]; matchingRightItems?: string[]; hint?: string; sectionName?: string; [key: string]: unknown };
+type Deck = Row & { cards: Card[] };
+type Pending = { title: string; path: string; method: string; body: Record<string, unknown>; username?: string; destructive?: boolean; effect?: string; reviewReason?: boolean };
+const tabs = ['decks', 'reviews', 'profiles', 'reports', 'audit'] as const;
+type Tab = typeof tabs[number];
+const date = (seconds?: number) => seconds ? new Date(seconds * 1000).toLocaleString() : '—';
+
+export function AdminDashboard() {
+  const [overview, setOverview] = useState<Overview | null>(null);
+  const [tab, setTab] = useState<Tab>('decks');
+  const [rows, setRows] = useState<Row[]>([]);
+  const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
+  const [reviewFilter, setReviewFilter] = useState('pending');
+  const [reviewReason, setReviewReason] = useState('');
+  const [resolved, setResolved] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [next, setNext] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<EditableDeck | null>(null);
+  const [deck, setDeck] = useState<Deck | null>(null);
+  const [pending, setPending] = useState<Pending | null>(null);
+  const [username, setUsername] = useState('');
+  const sequence = useRef(0);
+
+  const load = useCallback(async () => {
+    const current = ++sequence.current;
+    setBusy(true); setError('');
+    try {
+      const [summary, page] = await Promise.all([api<Overview>('overview'), api<{ items: Row[]; nextOffset: number | null }>(`${tab}?offset=${offset}&q=${encodeURIComponent(query)}&resolved=${resolved}&status=${reviewFilter}`)]);
+      if (current !== sequence.current) return;
+      setOverview(summary); setRows(page.items); setNext(page.nextOffset);
+    } catch (e) { if (current === sequence.current) setError((e as Error).message); }
+    finally { if (current === sequence.current) setBusy(false); }
+  }, [tab, offset, query, resolved, reviewFilter]);
+  useEffect(() => { void load(); return () => { sequence.current++; }; }, [load]);
+
+  function changeTab(value: Tab) { setCreating(false); setTab(value); setOffset(0); setQuery(''); setSearch(''); setRows([]); setDeck(null); setPending(null); setNotice(''); }
+  function searchRows(e: FormEvent) { e.preventDefault(); setOffset(0); setQuery(search.trim()); }
+  async function preview(id: string, edit = false) {
+    setBusy(true); setError(''); setDeck(null);
+    try { const result = await api<{ deck: Deck & EditableDeck }>(`decks/${id}`); if (edit) { setEditing(result.deck); setPending(null); } else setDeck(result.deck); }
+    catch (e) { setError((e as Error).message); }
+    finally { setBusy(false); }
+  }
+  function visibility(row: Row) {
+    const id = row.id || row.deck_id;
+    setPending({ title: row.admin_hidden ? `Restore “${row.name}” to its previous visibility?` : `Hide “${row.name}” from the community?`, path: `decks/${id}`, method: 'PATCH', body: { hidden: !row.admin_hidden } });
+  }
+  function deleteItem(row: Row, kind: 'deck' | 'profile' | 'report') {
+    const common = { destructive: true, method: 'POST' };
+    if (kind === 'deck') setPending({ ...common, title: `Delete “${row.name}”?`, path: `decks/${row.id || row.deck_id}`, method: 'DELETE', body: {}, effect: 'Removes the community copy and its media. Cannot be restored. Already downloaded copies stay on users’ devices.' });
+    if (kind === 'profile') setPending({ ...common, title: `Delete ${row.handle}?`, path: 'profiles/delete', body: { id: row.id }, effect: `Removes this profile, its ${row.deck_count ?? 0} community decks, reports, and sign-in sessions. Cannot be restored. Personal decks on their device stay intact. They can create a new profile by signing in again.` });
+    if (kind === 'report') setPending({ ...common, title: `Delete this report for “${row.name}”?`, path: 'reports/delete', body: { deckId: row.deck_id, userId: row.user_id, createdAt: row.created_at }, effect: 'Permanently removes this report. The deck and profiles stay intact.' });
+  }
+  function decision(row: Row, action: 'approve' | 'reject') {
+    setReviewReason(''); setPending({ title: `${action === 'approve' ? 'Approve' : 'Reject'} “${row.name}”?`, path: `decks/${row.id}/review`, method: 'POST', body: { decision: action, expectedRevision: row.revision }, reviewReason: action === 'reject', effect: action === 'approve' ? 'Makes this submission available in the public community library, unless it is hidden.' : 'Keeps the deck private and shows your reason to the author.' });
+  }
+  async function confirm() {
+    if (!pending) return;
+    setBusy(true); setError('');
+    try {
+      await api(pending.path, { method: pending.method, body: JSON.stringify({ ...pending.body, ...(pending.username !== undefined ? { username } : {}), ...(pending.reviewReason ? { reason: reviewReason } : {}) }) });
+      setPending(null); setNotice(pending.destructive ? 'Deleted.' : 'Saved.'); setDeck(null); await load();
+    } catch (e) { setError((e as Error).message); }
+    finally { setBusy(false); }
+  }
+
+  return <main className="admin">
+    <header><h1>LearnAlert <small>Admin</small></h1><div className="admin-user"><span>{overview?.actor}</span><a className="admin-link" href="/cdn-cgi/access/logout">Sign out</a></div></header>
+    <section className="admin-stats" aria-label="Community totals">
+      {[['Published decks', overview?.decks.published], ['Hidden decks', overview?.decks.hidden], ['Profiles', overview?.profiles], ['Open reports', overview?.reports], ['Pending reviews', overview?.pendingReviews]].map(([label, value]) => <article key={String(label)}><small>{label}</small><strong>{value ?? '—'}</strong></article>)}
+    </section>
+    <nav aria-label="Admin sections">{tabs.map(value => <button key={value} aria-current={!creating && tab === value ? 'page' : undefined} onClick={() => changeTab(value)} disabled={busy || Boolean(editing)}>{value[0].toUpperCase() + value.slice(1)}</button>)}<button aria-current={creating ? 'page' : undefined} disabled={busy || Boolean(editing)} onClick={() => { setCreating(true); setDeck(null); setPending(null); setNotice(''); }}>New deck</button></nav>
+    <form className="admin-tools" onSubmit={searchRows} hidden={Boolean(editing) || creating}>
+      {tab !== 'audit' && <><input aria-label={`Search ${tab}`} placeholder={`Search ${tab}`} value={search} onChange={e => setSearch(e.target.value)} maxLength={120} /><button disabled={busy}>Search</button></>}
+      {tab === 'reviews' && <select aria-label="Review status" value={reviewFilter} onChange={e => { setReviewFilter(e.target.value); setOffset(0); }}><option value="pending">Pending</option><option value="rejected">Rejected</option><option value="approved">Approved</option></select>}
+      {tab === 'reports' && <select aria-label="Report status" value={String(resolved)} onChange={e => { setResolved(e.target.value === 'true'); setOffset(0); }}><option value="false">Open</option><option value="true">Resolved</option></select>}
+      <button type="button" onClick={() => void load()} disabled={busy}>Refresh</button>
+    </form>
+    {tab === 'reviews' && !editing && <p className="admin-review-note">Review can take up to 3 days. Submissions remain private until you approve them. Author edits to an approved deck send it back to review.</p>}
+    {error && <div role="alert" className="admin-message admin-error">{error}<p><a href="/admin">Reload / sign in</a></p></div>}
+    {notice && <p role="status">{notice}</p>}
+    {pending && <div className="admin-confirm" role="region" aria-label="Confirm action"><div><strong>{pending.title}</strong>{pending.effect && <p className="admin-delete-effect">{pending.effect}</p>}</div>{pending.reviewReason && <label className="admin-editor-label">Rejection reason<textarea value={reviewReason} maxLength={1000} rows={3} onChange={e => setReviewReason(e.target.value)} /></label>}{pending.username !== undefined && <input aria-label="New username" value={username} onChange={e => setUsername(e.target.value)} maxLength={24} />}<button className={pending.destructive ? 'admin-danger' : undefined} onClick={() => void confirm()} disabled={busy || Boolean(pending.reviewReason && !reviewReason.trim())}>{pending.destructive ? 'Delete permanently' : 'Confirm'}</button><button onClick={() => setPending(null)} disabled={busy}>Cancel</button></div>}
+    <div className="admin-table" aria-busy={busy} hidden={Boolean(editing) || creating}>
+      <table><thead><tr>{(tab === 'decks' ? ['Deck', 'Author', 'Status', 'Dates', 'Activity', 'Actions'] : tab === 'reviews' ? ['Submission', 'Author', 'Submitted', 'Review', 'Actions'] : tab === 'profiles' ? ['Profile', 'Created', 'Decks', 'Actions'] : tab === 'reports' ? ['Deck', 'Report', 'Filed', 'Actions'] : ['Time', 'Admin', 'Action', 'Details']).map(label => <th key={label} scope="col">{label}</th>)}</tr></thead>
+        <tbody>{rows.map((row, index) => <tr key={row.id || `${row.deck_id}-${row.user_id}-${index}`}>
+          {tab === 'decks' && <><td>{row.name}<small>{row.category_tag} · {row.card_count} cards</small></td><td>{row.handle}</td><td>{row.status === 'deleted' ? 'Deleted' : row.admin_hidden ? 'Hidden' : row.review_status === 'pending' ? 'Pending review' : row.review_status === 'rejected' ? 'Rejected' : row.status}</td><td><small>Created {date(row.created_at)}</small><small>Published {date(row.published_at)}</small><small>Updated {date(row.updated_at)}</small></td><td>{row.download_count} downloads<small>{row.report_count} open reports</small></td><td><div className="actions"><button onClick={() => void preview(row.id!)} disabled={busy}>Preview</button>{row.status !== 'deleted' && <><button onClick={() => void preview(row.id!, true)} disabled={busy}>Edit</button><button onClick={() => visibility(row)} disabled={busy}>{row.admin_hidden ? 'Restore' : 'Hide'}</button><button className="admin-danger" onClick={() => deleteItem(row, 'deck')} disabled={busy}>Delete</button></>}</div></td></>}
+          {tab === 'reviews' && <><td>{row.name}<small>{row.card_count} cards</small></td><td>{row.handle}</td><td>{date(row.submitted_at)}</td><td>{row.review_status}{row.review_message && <small>{row.review_message}</small>}{row.reviewed_at && <small>Reviewed {date(row.reviewed_at)}</small>}</td><td><div className="actions"><button disabled={busy} onClick={() => void preview(row.id!)}>Preview</button><button disabled={busy} onClick={() => void preview(row.id!, true)}>Edit</button>{row.review_status === 'pending' && <><button disabled={busy} onClick={() => decision(row, 'approve')}>Approve</button><button disabled={busy} className="admin-danger" onClick={() => decision(row, 'reject')}>Reject</button></>}</div></td></>}
+          {tab === 'profiles' && <><td>{row.handle}<small>{row.profile_completed ? 'Complete' : 'Setup pending'}</small></td><td>{date(row.created_at)}</td><td>{row.deck_count}</td><td><div className="actions"><button disabled={busy} onClick={() => { setUsername(row.handle?.replace(/^@/, '') || ''); setPending({ title: `Rename ${row.handle}`, path: 'profiles/update', method: 'POST', body: { id: row.id }, username: row.handle }); }}>Rename</button><button className="admin-danger" disabled={busy} onClick={() => deleteItem(row, 'profile')}>Delete</button></div></td></>}
+          {tab === 'reports' && <><td>{row.name}<small>{row.owner_handle} · {row.admin_hidden ? 'Hidden' : row.review_status === 'pending' ? 'Pending review' : row.review_status === 'rejected' ? 'Rejected' : row.status}</small></td><td>{row.reason}<small>Reported by {row.reporter_handle}</small></td><td>{date(row.created_at)}{row.resolved_at && <small>Resolved {date(row.resolved_at)}</small>}</td><td><div className="actions"><button disabled={busy} onClick={() => void preview(row.deck_id!)}>Preview</button>{row.status !== 'deleted' && <button disabled={busy} onClick={() => visibility(row)}>{row.admin_hidden ? 'Restore' : 'Hide'}</button>}{!resolved && <button disabled={busy} onClick={() => setPending({ title: 'Mark this report resolved?', path: 'reports/resolve', method: 'POST', body: { deckId: row.deck_id, userId: row.user_id, createdAt: row.created_at } })}>Resolve</button>}<button className="admin-danger" disabled={busy} onClick={() => deleteItem(row, 'report')}>Delete</button></div></td></>}
+          {tab === 'audit' && <><td>{date(row.created_at)}</td><td>{row.actor}</td><td>{row.action}<small>{row.target}</small></td><td><pre>{row.details}</pre></td></>}
+        </tr>)}</tbody></table>
+      {!rows.length && <p className="admin-empty">{busy ? 'Loading…' : error ? 'Data unavailable.' : 'No results.'}</p>}
+    </div>
+    <div className="admin-paging" hidden={Boolean(editing) || creating}><button disabled={busy || offset === 0} onClick={() => setOffset(Math.max(0, offset - 50))}>Previous</button><small>Page {offset / 50 + 1}</small><button disabled={busy || next === null} onClick={() => setOffset(next!)}>Next</button></div>
+    {creating && <NewDeck onCreated={async id => { setCreating(false); setTab('decks'); setNotice('Draft created.'); await preview(id, true); }} />}
+    {editing && <DeckEditor key={editing.id} deck={editing} onUpload={file => uploadAdminMedia(editing.id, file)} onPublish={editing.status === 'draft' && editing.admin_created === 1 && !['pending','rejected'].includes(editing.review_status || '') ? async body => { await api(`decks/${editing.id}`, { method: 'PUT', body: JSON.stringify(body) }); const current = await api<{ deck: EditableDeck }>(`decks/${editing.id}`); await api(`decks/${editing.id}/publish`, { method: 'POST', body: JSON.stringify({ expectedRevision: current.deck.revision }) }); setEditing(null); setNotice('Deck published.'); await load(); } : undefined} onClose={() => { setEditing(null); void load(); }} onSave={async body => { await api(`decks/${editing.id}`, { method: 'PUT', body: JSON.stringify(body) }); setEditing(null); setNotice('Deck saved.'); await load(); }} />}
+    {deck && <section className="admin-detail" aria-label="Deck preview"><header><h2>{deck.name}</h2><button onClick={() => setDeck(null)}>Close preview</button></header><p>{deck.description}</p>{deck.review_status && <p className="admin-review-note">Review: {deck.review_status} · Submitted {date(deck.submitted_at)}{deck.review_message ? ` · ${deck.review_message}` : ''}</p>}<small>{deck.handle} · {deck.cards.length} cards</small><p className="admin-dates"><small>Created {date(deck.created_at)} · Published {date(deck.published_at)} · Updated {date(deck.updated_at)}</small></p>{deck.cards.map((card, index) => <article className="admin-card" key={card.id || index}><small>Card {index + 1}</small><p>{card.question}</p>{card.promptImageID && <img src={`/admin/api/media/${card.promptImageID}`} alt="Card prompt" />}{card.promptAudioID && <audio controls src={`/admin/api/media/${card.promptAudioID}`} />}{card.options?.map((option, n) => <p key={n}>{option}{card.optionImageIDs?.[n] && <img src={`/admin/api/media/${card.optionImageIDs[n]}`} alt={`Option ${n + 1}`} />}</p>)}{card.matchingLeftItems?.map((left, n) => <p key={`pair-${n}`}>{left} → {card.matchingRightItems?.[n]}</p>)}{card.hint && <p><small>Hint: {card.hint}</small></p>}<p><strong>Answer:</strong> {card.correctAnswer}</p><details><summary>Card data</summary><pre>{JSON.stringify(card, null, 2)}</pre></details></article>)}</section>}
+  </main>;
+}
