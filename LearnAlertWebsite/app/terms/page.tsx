@@ -16,7 +16,7 @@ export default function TermsAndConditions() {
     <main className="legal">
       <p className="eyebrow"><span /> LEGAL</p>
       <h1>Terms and Conditions</h1>
-      <p className="legal-meta">Last updated: October 9, 2026 · Official contact: <a href="mailto:contact@learnalertapp.com">contact@learnalertapp.com</a> · <a href="https://learnalertapp.com">learnalertapp.com</a></p>
+      <p className="legal-meta">Last updated: October 14, 2026 · Official contact: <a href="mailto:contact@learnalertapp.com">contact@learnalertapp.com</a> · <a href="https://learnalertapp.com">learnalertapp.com</a></p>
       <p className="legal-lede">Welcome to <strong>LearnAlert</strong>. These Terms and Conditions (&ldquo;Terms&rdquo;) govern your use of the LearnAlert mobile application and related services (collectively, the &ldquo;Service&rdquo;) operated by LearnAlert (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;). By downloading, installing, or using LearnAlert, you agree to be bound by these Terms. If you do not agree, please do not use the Service.</p>
 
       <section className="legal-section">
@@ -55,8 +55,10 @@ export default function TermsAndConditions() {
 
       <section className="legal-section">
         <h2>Community Decks</h2>
-        <p>Publishing makes your submitted deck and attachments available to other users. You retain ownership of your original content and authorize LearnAlert to store, display, and distribute that public copy to provide the community feature. Publish only content you have permission to share.</p>
-        <p>You can update or remove your public decks and delete your community account from Share a Deck. Removal blocks new downloads, but copies previously downloaded by others may remain. Users may report public decks; we may remove content that violates these Terms or suspend access for abuse.</p>
+        <p>Community submissions stay private until manually approved. Review can take up to 3 days, with no automatic approval deadline. Approval makes your deck, attachments, chosen username, character profile, and opaque community author ID available to others. You retain ownership of original content and authorize LearnAlert to store, review, display, and distribute the shared copy. Share only material you have permission to publish.</p>
+        <p>You can update or remove your shared submissions and delete your community account in the app. Author updates return approved decks to private review. Pending and rejected submissions are retained until removed. Removal blocks new downloads, while previously downloaded personal copies may remain.</p>
+        <p>Signed-in users can report decks, block authors, and manage their block list. A block filters community content while that viewer is signed in; it does not delete personal downloaded copies. Administrators may correct, hide, reject, or remove content and suspend or ban abusive accounts. Restrictions may survive profile deletion to prevent evasion. Private notes explain moderation actions; removal notices can be dismissed by the author. Contact contact@learnalertapp.com for moderation concerns or an appeal.</p>
+        <p>Community account deletion removes the profile, sessions, reports, submissions, block list, and removal notices, and queues attachments for cleanup. Apple reauthentication may be necessary for authorization revocation. Security restrictions and moderation audit records may remain as described in the Privacy Policy. Deleting the app alone does not delete the server-side community account.</p>
       </section>
 
       <section className="legal-section">
