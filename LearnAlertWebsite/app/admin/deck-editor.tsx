@@ -31,9 +31,14 @@ export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish }: { dec
   const [error, setError] = useState('');
   const [dirty, setDirty] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const types = ['tap_reveal', 'vocabulary', 'multiple_choice', 'matching', 'fill_blank'];
+  const types = ['tap_reveal', 'vocabulary', 'multiple_choice', 'matching', 'fill_blank', 'images'];
   function edit(index: number, patch: Partial<EditableCard>) {
     setCards(current => current.map((card, i) => i === index ? { ...card, ...patch } : card)); setDirty(true);
+  }
+  function changeCardType(index: number, cardType: string) {
+    edit(index, cardType === 'images'
+      ? { cardType, question: '', correctAnswer: '', hint: '', options: [], matchingLeftItems: [], matchingRightItems: [], optionImageIDs: [], promptAudioID: null }
+      : { cardType });
   }
   function close() { if (!dirty || window.confirm('Discard unsaved deck changes?')) onClose(); }
   function mode() {
@@ -86,13 +91,13 @@ export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish }: { dec
     {advanced ? <label className="admin-editor-label">Card data<textarea className="admin-json" rows={22} value={json} spellCheck={false} onChange={e => { setJSON(e.target.value); setDirty(true); }} /></label> : <>
       {cards.map((card, index) => <article className="admin-card" key={card.id}>
         <header><strong>Card {index + 1}</strong><button type="button" className="admin-danger" onClick={() => { setCards(current => current.filter((_, i) => i !== index)); setDirty(true); }}>Remove card</button></header>
-        <div className="admin-editor-grid"><label>Card type<select value={card.cardType} onChange={e => edit(index, { cardType: e.target.value })}>{types.map(value => <option key={value}>{value}</option>)}</select></label><label>Section<input value={card.sectionName ?? ''} maxLength={120} onChange={e => edit(index, { sectionName: e.target.value })} /></label></div>
-        <label className="admin-editor-label">Question<textarea value={card.question ?? ''} required maxLength={5000} rows={2} onChange={e => edit(index, { question: e.target.value })} /></label>
+        <div className="admin-editor-grid"><label>Card type<select value={card.cardType} onChange={e => changeCardType(index, e.target.value)}>{types.map(value => <option key={value}>{value}</option>)}</select></label><label>Section<input value={card.sectionName ?? ''} maxLength={120} onChange={e => edit(index, { sectionName: e.target.value })} /></label></div>
+        {card.cardType !== 'images' && <><label className="admin-editor-label">Question<textarea value={card.question ?? ''} required maxLength={5000} rows={2} onChange={e => edit(index, { question: e.target.value })} /></label>
         <label className="admin-editor-label">Answer<textarea value={card.correctAnswer ?? ''} required={card.cardType !== 'matching'} maxLength={10000} rows={2} onChange={e => edit(index, { correctAnswer: e.target.value })} /></label>
-        <label className="admin-editor-label">Hint<input value={card.hint ?? ''} maxLength={2000} onChange={e => edit(index, { hint: e.target.value })} /></label>
+        <label className="admin-editor-label">Hint<input value={card.hint ?? ''} maxLength={2000} onChange={e => edit(index, { hint: e.target.value })} /></label></>}
         {card.cardType === 'multiple_choice' && <label className="admin-editor-label">Choices (one per line)<textarea rows={4} value={(card.options ?? []).join('\n')} onChange={e => edit(index, { options: e.target.value.split('\n') })} /></label>}
         {card.cardType === 'matching' && <div className="admin-editor-grid"><label>Left items (one per line)<textarea rows={4} value={(card.matchingLeftItems ?? []).join('\n')} onChange={e => edit(index, { matchingLeftItems: e.target.value.split('\n') })} /></label><label>Right items (same order)<textarea rows={4} value={(card.matchingRightItems ?? []).join('\n')} onChange={e => edit(index, { matchingRightItems: e.target.value.split('\n') })} /></label></div>}
-        <div className="admin-editor-grid"><label>Prompt image<input type="file" accept=".png,.jpg,.jpeg" onChange={e => { void attachment(index, e.target.files?.[0], 'image'); e.target.value = ''; }} /></label><label>Prompt audio<input type="file" accept=".mp3,.m4a,.wav" onChange={e => { void attachment(index, e.target.files?.[0], 'audio'); e.target.value = ''; }} /></label></div>
+        <div className="admin-editor-grid"><label>{card.cardType === 'images' ? 'Image' : 'Prompt image'}<input type="file" accept=".png,.jpg,.jpeg" onChange={e => { void attachment(index, e.target.files?.[0], 'image'); e.target.value = ''; }} /></label>{card.cardType !== 'images' && <label>Prompt audio<input type="file" accept=".mp3,.m4a,.wav" onChange={e => { void attachment(index, e.target.files?.[0], 'audio'); e.target.value = ''; }} /></label>}</div>
         {card.promptImageID && <img src={`/admin/api/media/${card.promptImageID}`} alt="Card prompt" />}{card.promptAudioID && <audio controls src={`/admin/api/media/${card.promptAudioID}`} />}
         {card.promptImageID && <button type="button" onClick={() => edit(index, { promptImageID: null })}>Remove image</button>}{card.promptAudioID && <button type="button" onClick={() => edit(index, { promptAudioID: null })}>Remove audio</button>}
         {card.cardType === 'multiple_choice' && card.options?.map((option, n) => <label className="admin-editor-label" key={n}>Choice {n + 1} image ({option})<input type="file" accept=".png,.jpg,.jpeg" onChange={e => { void attachment(index, e.target.files?.[0], 'image', n); e.target.value = ''; }} />{card.optionImageIDs?.[n] && <><img src={`/admin/api/media/${card.optionImageIDs[n]}`} alt={`Choice ${n + 1}`} /><button type="button" onClick={() => { const images = [...(card.optionImageIDs || [])]; images[n] = null; edit(index, { optionImageIDs: images }); }}>Remove choice image</button></>}</label>)}
