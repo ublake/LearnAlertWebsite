@@ -4,6 +4,7 @@ import { adminAPI, uploadAdminMedia } from './admin-client';
 
 import { example, instructions } from './deck-format';
 import { FormatGuide } from './format-guide';
+import type { FieldMedia } from './deck-editor';
 
 export function NewDeck({ onCreated }: { onCreated: (id: string) => Promise<void> }) {
   const [mode, setMode] = useState<'manual' | 'import'>('manual');
@@ -49,7 +50,16 @@ export function NewDeck({ onCreated }: { onCreated: (id: string) => Promise<void
         if (!card || typeof card !== 'object') throw new Error(`Card ${i + 1} must be an object.`);
         if (card.promptImageID || card.answerImageID || card.promptAudioID || card.optionImageIDs) throw new Error('For imports use promptImage, answerImage, promptAudio and optionImages filenames, rather than media IDs.');
         if (card.optionImages !== undefined && !Array.isArray(card.optionImages)) throw new Error('optionImages must be an array in the same order as options.');
-        return { ...card, id: card.id ?? `card-${i+1}`, promptImageID: reference(card.promptImage, 'image'), answerImageID: reference(card.answerImage, 'image'), promptAudioID: reference(card.promptAudio, 'audio'), optionImageIDs: (card.optionImages as unknown[] || []).map(value => reference(value, 'image')) };
+        const rawFields = card.fieldMedia ?? {};
+        if (!rawFields || typeof rawFields !== 'object' || Array.isArray(rawFields)) throw new Error('fieldMedia must be a field-keyed object.');
+        const fieldMedia: Record<string, FieldMedia> = {};
+        for (const [key, item] of Object.entries(rawFields)) {
+          if (!item || typeof item !== 'object' || Array.isArray(item) || Object.keys(item).some(name => !['image','audio'].includes(name))) throw new Error('Use image/audio filenames in fieldMedia, not saved media IDs.');
+          const attachment = item as { image?: unknown; audio?: unknown };
+          fieldMedia[key] = { imageID: reference(attachment.image, 'image'), audioID: reference(attachment.audio, 'audio') };
+        }
+
+        return { ...card, id: card.id ?? `card-${i+1}`, fieldMedia, promptImageID: reference(card.promptImage, 'image'), answerImageID: reference(card.answerImage, 'image'), promptAudioID: reference(card.promptAudio, 'audio'), optionImageIDs: (card.optionImages as unknown[] || []).map(value => reference(value, 'image')) };
       });
       const payload = { ...raw, cards, downloadCount: 0 };
       setProgress('Validating deck…');
@@ -62,7 +72,8 @@ export function NewDeck({ onCreated }: { onCreated: (id: string) => Promise<void
         setProgress(`Uploading ${++count}/${needed.size}: ${filename}`);
         if (!actual[filename]) { actual[filename] = await uploadAdminMedia(id, available.get(filename)!); setUploaded({ ...actual }); }
       }
-      const converted = cards.map((card: Record<string, unknown>) => ({ ...card, promptImageID: card.promptImage ? actual[String(card.promptImage)] : null, answerImageID: card.answerImage ? actual[String(card.answerImage)] : null, promptAudioID: card.promptAudio ? actual[String(card.promptAudio)] : null, optionImageIDs: ((card.optionImages as (string | null)[]) || []).map(value => value ? actual[value] : null) }));
+      const remap = Object.fromEntries(Object.entries(placeholders).map(([name, id]) => [id, actual[name]]));
+      const converted = cards.map((card: Record<string, unknown>) => ({ ...card, fieldMedia: Object.fromEntries(Object.entries((card.fieldMedia as Record<string, FieldMedia>) || {}).map(([key, value]) => [key, { imageID: value.imageID ? remap[value.imageID] : null, audioID: value.audioID ? remap[value.audioID] : null }])), promptImageID: card.promptImage ? actual[String(card.promptImage)] : null, answerImageID: card.answerImage ? actual[String(card.answerImage)] : null, promptAudioID: card.promptAudio ? actual[String(card.promptAudio)] : null, optionImageIDs: ((card.optionImages as (string | null)[]) || []).map(value => value ? actual[value] : null) }));
       const current = await adminAPI<{ deck: { revision: number } }>(`decks/${id}`);
       setProgress('Saving draft…');
       await adminAPI(`decks/${id}`, { method: 'PUT', body: JSON.stringify({ ...payload, cards: converted, expectedRevision: current.deck.revision }) });
