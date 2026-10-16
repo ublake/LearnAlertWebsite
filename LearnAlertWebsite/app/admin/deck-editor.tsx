@@ -6,7 +6,7 @@ export type EditableCard = {
   id: string; question: string; correctAnswer: string; cardType: string;
   hint?: string; sectionName?: string; options?: string[];
   matchingLeftItems?: string[]; matchingRightItems?: string[];
-  promptImageID?: string | null; promptAudioID?: string | null;
+  promptImageID?: string | null; answerImageID?: string | null; promptAudioID?: string | null;
   optionImageIDs?: (string | null)[];
 };
 export type EditableDeck = {
@@ -38,7 +38,7 @@ export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish }: { dec
   function changeCardType(index: number, cardType: string) {
     edit(index, cardType === 'images'
       ? { cardType, question: '', correctAnswer: '', hint: '', options: [], matchingLeftItems: [], matchingRightItems: [], optionImageIDs: [], promptAudioID: null }
-      : { cardType });
+      : { cardType, answerImageID: null });
   }
   function close() { if (!dirty || window.confirm('Discard unsaved deck changes?')) onClose(); }
   function mode() {
@@ -63,16 +63,17 @@ export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish }: { dec
     } catch (e) { setError((e as Error).message); }
     finally { setSaving(false); }
   }
-  async function attachment(index: number, file: File | undefined, kind: 'image' | 'audio', option?: number) {
+  async function attachment(index: number, file: File | undefined, kind: 'image' | 'audio', option?: number | 'back') {
     if (!file) return;
     setUploading(true); setError('');
     try {
       const id = await onUpload(file);
-      if (option !== undefined) {
+      if (typeof option === 'number') {
         const images = [...(cards[index].optionImageIDs || [])];
         while (images.length <= option) images.push(null);
         images[option] = id; edit(index, { optionImageIDs: images });
-      } else edit(index, kind === 'image' ? { promptImageID: id } : { promptAudioID: id });
+      } else if (option === 'back') edit(index, { answerImageID: id });
+      else edit(index, kind === 'image' ? { promptImageID: id } : { promptAudioID: id });
     } catch (e) { setError((e as Error).message); }
     finally { setUploading(false); }
   }
@@ -97,9 +98,10 @@ export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish }: { dec
         <label className="admin-editor-label">Hint<input value={card.hint ?? ''} maxLength={2000} onChange={e => edit(index, { hint: e.target.value })} /></label></>}
         {card.cardType === 'multiple_choice' && <label className="admin-editor-label">Choices (one per line)<textarea rows={4} value={(card.options ?? []).join('\n')} onChange={e => edit(index, { options: e.target.value.split('\n') })} /></label>}
         {card.cardType === 'matching' && <div className="admin-editor-grid"><label>Left items (one per line)<textarea rows={4} value={(card.matchingLeftItems ?? []).join('\n')} onChange={e => edit(index, { matchingLeftItems: e.target.value.split('\n') })} /></label><label>Right items (same order)<textarea rows={4} value={(card.matchingRightItems ?? []).join('\n')} onChange={e => edit(index, { matchingRightItems: e.target.value.split('\n') })} /></label></div>}
-        <div className="admin-editor-grid"><label>{card.cardType === 'images' ? 'Image' : 'Prompt image'}<input type="file" accept=".png,.jpg,.jpeg" onChange={e => { void attachment(index, e.target.files?.[0], 'image'); e.target.value = ''; }} /></label>{card.cardType !== 'images' && <label>Prompt audio<input type="file" accept=".mp3,.m4a,.wav" onChange={e => { void attachment(index, e.target.files?.[0], 'audio'); e.target.value = ''; }} /></label>}</div>
+        <div className="admin-editor-grid"><label>{card.cardType === 'images' ? 'Front image' : 'Prompt image'}<input type="file" accept=".png,.jpg,.jpeg" onChange={e => { void attachment(index, e.target.files?.[0], 'image'); e.target.value = ''; }} /></label>{card.cardType !== 'images' && <label>Prompt audio<input type="file" accept=".mp3,.m4a,.wav" onChange={e => { void attachment(index, e.target.files?.[0], 'audio'); e.target.value = ''; }} /></label>}</div>
         {card.promptImageID && <img src={`/admin/api/media/${card.promptImageID}`} alt="Card prompt" />}{card.promptAudioID && <audio controls src={`/admin/api/media/${card.promptAudioID}`} />}
         {card.promptImageID && <button type="button" onClick={() => edit(index, { promptImageID: null })}>Remove image</button>}{card.promptAudioID && <button type="button" onClick={() => edit(index, { promptAudioID: null })}>Remove audio</button>}
+        {card.cardType === 'images' && <><label className="admin-editor-label">Back image (optional)<input type="file" accept=".png,.jpg,.jpeg" onChange={e => { void attachment(index, e.target.files?.[0], 'image', 'back'); e.target.value = ''; }} /></label>{card.answerImageID && <><img src={`/admin/api/media/${card.answerImageID}`} alt="Card back" /><button type="button" onClick={() => edit(index, { answerImageID: null })}>Remove back image</button></>}</>}
         {card.cardType === 'multiple_choice' && card.options?.map((option, n) => <label className="admin-editor-label" key={n}>Choice {n + 1} image ({option})<input type="file" accept=".png,.jpg,.jpeg" onChange={e => { void attachment(index, e.target.files?.[0], 'image', n); e.target.value = ''; }} />{card.optionImageIDs?.[n] && <><img src={`/admin/api/media/${card.optionImageIDs[n]}`} alt={`Choice ${n + 1}`} /><button type="button" onClick={() => { const images = [...(card.optionImageIDs || [])]; images[n] = null; edit(index, { optionImageIDs: images }); }}>Remove choice image</button></>}</label>)}
       </article>)}
       <button type="button" onClick={() => { setCards(current => [...current, { id: crypto.randomUUID(), cardType: 'tap_reveal', question: '', correctAnswer: '' }]); setDirty(true); }} disabled={cards.length >= 500}>Add card</button>

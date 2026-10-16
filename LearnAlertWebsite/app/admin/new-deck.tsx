@@ -47,9 +47,9 @@ export function NewDeck({ onCreated }: { onCreated: (id: string) => Promise<void
       }
       const cards = raw.cards.map((card: Record<string, unknown>, i: number) => {
         if (!card || typeof card !== 'object') throw new Error(`Card ${i + 1} must be an object.`);
-        if (card.promptImageID || card.promptAudioID || card.optionImageIDs) throw new Error('For imports use promptImage, promptAudio and optionImages filenames, rather than media IDs.');
+        if (card.promptImageID || card.answerImageID || card.promptAudioID || card.optionImageIDs) throw new Error('For imports use promptImage, answerImage, promptAudio and optionImages filenames, rather than media IDs.');
         if (card.optionImages !== undefined && !Array.isArray(card.optionImages)) throw new Error('optionImages must be an array in the same order as options.');
-        return { ...card, id: card.id ?? `card-${i+1}`, promptImageID: reference(card.promptImage, 'image'), promptAudioID: reference(card.promptAudio, 'audio'), optionImageIDs: (card.optionImages as unknown[] || []).map(value => reference(value, 'image')) };
+        return { ...card, id: card.id ?? `card-${i+1}`, promptImageID: reference(card.promptImage, 'image'), answerImageID: reference(card.answerImage, 'image'), promptAudioID: reference(card.promptAudio, 'audio'), optionImageIDs: (card.optionImages as unknown[] || []).map(value => reference(value, 'image')) };
       });
       const payload = { ...raw, cards, downloadCount: 0 };
       setProgress('Validating deck…');
@@ -62,7 +62,7 @@ export function NewDeck({ onCreated }: { onCreated: (id: string) => Promise<void
         setProgress(`Uploading ${++count}/${needed.size}: ${filename}`);
         if (!actual[filename]) { actual[filename] = await uploadAdminMedia(id, available.get(filename)!); setUploaded({ ...actual }); }
       }
-      const converted = cards.map((card: Record<string, unknown>) => ({ ...card, promptImageID: card.promptImage ? actual[String(card.promptImage)] : null, promptAudioID: card.promptAudio ? actual[String(card.promptAudio)] : null, optionImageIDs: ((card.optionImages as (string | null)[]) || []).map(value => value ? actual[value] : null) }));
+      const converted = cards.map((card: Record<string, unknown>) => ({ ...card, promptImageID: card.promptImage ? actual[String(card.promptImage)] : null, answerImageID: card.answerImage ? actual[String(card.answerImage)] : null, promptAudioID: card.promptAudio ? actual[String(card.promptAudio)] : null, optionImageIDs: ((card.optionImages as (string | null)[]) || []).map(value => value ? actual[value] : null) }));
       const current = await adminAPI<{ deck: { revision: number } }>(`decks/${id}`);
       setProgress('Saving draft…');
       await adminAPI(`decks/${id}`, { method: 'PUT', body: JSON.stringify({ ...payload, cards: converted, expectedRevision: current.deck.revision }) });
