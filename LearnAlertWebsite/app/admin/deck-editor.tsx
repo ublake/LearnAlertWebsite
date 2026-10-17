@@ -23,9 +23,9 @@ export function cardMedia(card: EditableCard, key: string): FieldMedia {
   if (key.startsWith('option:')) return { imageID: card.optionImageIDs?.[Number(key.split(':')[1])] };
   return {};
 }
-function MediaField({ label, value, media, onText, onMedia, onUpload, imageOnly = false }: {
+function MediaField({ label, value, media, onText, onMedia, onUpload, imageOnly = false, directUploads = false }: {
   label: string; value: string; media: FieldMedia; onText: (text: string) => void;
-  onMedia: (patch: FieldMedia) => void; onUpload: (file: File, kind: 'imageID' | 'audioID') => void; imageOnly?: boolean;
+  onMedia: (patch: FieldMedia) => void; onUpload: (file: File, kind: 'imageID' | 'audioID') => void; imageOnly?: boolean; directUploads?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [start, setStart] = useState<{ x: number; y: number } | null>(null);
@@ -36,11 +36,14 @@ function MediaField({ label, value, media, onText, onMedia, onUpload, imageOnly 
     setStart(null);
   }
   return <div className="admin-media-field">
-    <div className="admin-media-label"><label>{label}</label><button type="button" aria-label={`Attachments for ${label}`} aria-expanded={open} onClick={() => setOpen(!open)}>＋ Attach</button></div>
+    <div className="admin-media-label"><label>{label}</label>{!directUploads && <button type="button" aria-label={`Attachments for ${label}`} aria-expanded={open} onClick={() => setOpen(!open)}>＋ Attach</button>}</div>
     {!imageOnly && <textarea aria-label={label} rows={1} maxLength={label === 'Hint' ? 2000 : label === 'Answer' ? 10000 : 5000} placeholder="Text, image or audio" value={value} onChange={e => onText(e.target.value)} onTouchStart={e => setStart({ x: e.touches[0].clientX, y: e.touches[0].clientY })} onTouchEnd={end} />}
-    {(open || imageOnly) && <div className="admin-media-tools"><label>Image<input type="file" accept=".png,.jpg,.jpeg" onChange={e => { if (e.target.files?.[0]) onUpload(e.target.files[0], 'imageID'); e.target.value = ''; }} /></label>{!imageOnly && <label>Audio<input type="file" accept=".mp3,.m4a,.wav" onChange={e => { if (e.target.files?.[0]) onUpload(e.target.files[0], 'audioID'); e.target.value = ''; }} /></label>}</div>}
+    {(open || imageOnly || directUploads) && <div className={`admin-media-tools${directUploads ? ' admin-choice-uploads' : ''}`}>
+      <label className={directUploads ? 'admin-upload-button' : undefined}>{media.imageID ? 'Replace image' : 'Add image'}<input type="file" aria-label={`${media.imageID ? 'Replace' : 'Add'} image for ${label}`} accept=".png,.jpg,.jpeg" onChange={e => { if (e.target.files?.[0]) onUpload(e.target.files[0], 'imageID'); e.target.value = ''; }} /></label>
+      {!imageOnly && <label className={directUploads ? 'admin-upload-button' : undefined}>{media.audioID ? 'Replace audio' : 'Add audio'}<input type="file" aria-label={`${media.audioID ? 'Replace' : 'Add'} audio for ${label}`} accept=".mp3,.m4a,.wav" onChange={e => { if (e.target.files?.[0]) onUpload(e.target.files[0], 'audioID'); e.target.value = ''; }} /></label>}
+    </div>}
     {media.imageID && <div className="admin-media-preview"><img src={`/admin/api/media/${media.imageID}`} alt={label} /><button type="button" onClick={() => onMedia({ imageID: null })} aria-label={`Remove ${label} image`}>×</button></div>}
-    {media.audioID && <div className="admin-media-preview"><audio controls preload="none" src={`/admin/api/media/${media.audioID}`} /><button type="button" onClick={() => onMedia({ audioID: null })} aria-label={`Remove ${label} audio`}>×</button></div>}
+    {media.audioID && <div className="admin-media-preview"><audio aria-label={`${label} audio preview`} controls preload="none" src={`/admin/api/media/${media.audioID}`} /><button type="button" onClick={() => onMedia({ audioID: null })} aria-label={`Remove ${label} audio`}>×</button></div>}
   </div>;
 }
 export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish }: { deck: EditableDeck; onSave: (body: Record<string, unknown>) => Promise<void>; onClose: () => void; onUpload: (file: File) => Promise<string>; onPublish?: (body: Record<string, unknown>) => Promise<void> }) {
@@ -92,7 +95,7 @@ export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish }: { dec
     catch (e) { setError((e as Error).message); } finally { setSaving(false); }
   }
   const field = (label: string, value: string, setter: (value: string) => void, max: number) => <label>{label}<input value={value} maxLength={max} required onChange={e => { setter(e.target.value); setDirty(true); }} /></label>;
-  const mediaField = (card: EditableCard, index: number, key: string, label: string, value: string, onText: (text: string) => void, imageOnly = false) => <MediaField key={key} label={label} value={value} media={cardMedia(card, key)} onText={onText} onMedia={patch => setMedia(index, key, patch)} onUpload={(file, kind) => { void attachment(index, key, file, kind); }} imageOnly={imageOnly} />;
+  const mediaField = (card: EditableCard, index: number, key: string, label: string, value: string, onText: (text: string) => void, imageOnly = false) => <MediaField key={key} label={label} value={value} media={cardMedia(card, key)} onText={onText} onMedia={patch => setMedia(index, key, patch)} onUpload={(file, kind) => { void attachment(index, key, file, kind); }} imageOnly={imageOnly} directUploads={key.startsWith('option:')} />;
   function choices(index: number, count: number, matching: boolean) {
     const card = cards[index];
     const allowed = new Set(['prompt', 'answer', 'hint', ...Array.from({ length: count }, (_, i) => matching ? [`left:${i}`, `right:${i}`] : [`option:${i}`]).flat()]);
