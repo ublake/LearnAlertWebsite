@@ -1,0 +1,28 @@
+{
+  "id": "example-exam",
+  "name": "Example exam deck",
+  "category": "Exam Prep",
+  "subcategory": "Study Skills",
+  "description": "One example question.",
+  "colorHex": "#75B9DA",
+  "deckType": "Mixed",
+  "cards": [
+    {
+      "id": "example-exam-card-1",
+      "question": "Which method practices retrieval?",
+      "options": [
+        "Answering without looking",
+        "Rereading only"
+      ],
+      "correctAnswer": "Answering without looking",
+      "hint": "Try to recall information.",
+      "cardType": "multiple_choice",
+      "matchingLeftItems": [],
+      "matchingRightItems": [],
+      "optionImageNames": [],
+      "fieldMedia": {},
+      "correctOptionIndex": 0,
+      "sectionName": "Recall"
+    }
+  ]
+}

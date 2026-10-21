@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent, type TouchEvent } from 'react';
+import { useEffect, useState, type FormEvent, type TouchEvent } from 'react';
 
 export type FieldMedia = { imageID?: string | null; audioID?: string | null };
 export type EditableCard = {
@@ -46,13 +46,15 @@ function MediaField({ label, value, media, onText, onMedia, onUpload, imageOnly 
     {media.audioID && <div className="admin-media-preview"><audio aria-label={`${label} audio preview`} controls preload="none" src={`/admin/api/media/${media.audioID}`} /><button type="button" onClick={() => onMedia({ audioID: null })} aria-label={`Remove ${label} audio`}>×</button></div>}
   </div>;
 }
-export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish }: { deck: EditableDeck; onSave: (body: Record<string, unknown>) => Promise<void>; onClose: () => void; onUpload: (file: File) => Promise<string>; onPublish?: (body: Record<string, unknown>) => Promise<void> }) {
+export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish, onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void; deck: EditableDeck; onSave: (body: Record<string, unknown>) => Promise<void>; onClose: () => void; onUpload: (file: File) => Promise<string>; onPublish?: (body: Record<string, unknown>) => Promise<void> }) {
   const [name, setName] = useState(deck.name), [description, setDescription] = useState(deck.description);
   const [adminNote, setAdminNote] = useState(deck.admin_note || ''), [category, setCategory] = useState(deck.category_tag);
   const [color, setColor] = useState(deck.color_hex), [type, setType] = useState(deck.deck_type), [downloads, setDownloads] = useState(deck.download_count);
   const [cards, setCards] = useState(deck.cards), [json, setJSON] = useState(JSON.stringify(deck.cards, null, 2));
   const [advanced, setAdvanced] = useState(false), [saving, setSaving] = useState(false), [error, setError] = useState(''), [dirty, setDirty] = useState(false), [uploading, setUploading] = useState(false);
   const [hints, setHints] = useState(new Set(deck.cards.filter(card => card.hint || cardMedia(card, 'hint').imageID || cardMedia(card, 'hint').audioID).map(card => card.id)));
+  useEffect(() => { onDirtyChange?.(dirty); return () => onDirtyChange?.(false); }, [dirty, onDirtyChange]);
+  const [selectedCard, setSelectedCard] = useState(0), [cardSearch, setCardSearch] = useState('');
   const types = ['tap_reveal', 'vocabulary', 'multiple_choice', 'matching', 'fill_blank', 'images'];
   function edit(index: number, patch: Partial<EditableCard>) { setCards(current => current.map((card, i) => i === index ? { ...card, ...patch } : card)); setDirty(true); }
   function changeCardType(index: number, cardType: string) {
@@ -113,8 +115,8 @@ export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish }: { dec
     <details><summary>Note to author</summary><textarea aria-label="Note to author" value={adminNote} maxLength={1000} rows={2} onChange={e => { setAdminNote(e.target.value); setDirty(true); }} /></details>
     <header><h2>Cards ({advanced ? 'JSON' : cards.length})</h2><button type="button" onClick={mode}>{advanced ? 'Card editor' : 'Edit JSON'}</button></header>
     {advanced ? <textarea aria-label="Card data" className="admin-json" rows={22} value={json} spellCheck={false} onChange={e => { setJSON(e.target.value); setDirty(true); }} /> : <>
-      {cards.map((card, index) => <article className="admin-card" key={card.id}>
-        <header><strong>Card {index + 1}</strong><button type="button" className="admin-danger" onClick={() => { setCards(current => current.filter((_, i) => i !== index)); setDirty(true); }}>Remove card</button></header>
+      <div className="admin-deck-card-workbench"><aside className="admin-deck-card-list"><input aria-label="Find card" placeholder="Find card…" value={cardSearch} onChange={e => setCardSearch(e.target.value)} />{cards.map((card, index) => !cardSearch || `${card.question} ${card.correctAnswer} ${card.sectionName}`.toLowerCase().includes(cardSearch.toLowerCase()) ? <button type="button" className={selectedCard === index ? 'is-selected' : ''} key={card.id} onClick={() => setSelectedCard(index)}><small>{index + 1}</small><span>{card.question || card.cardType}</span></button> : null)}</aside><div className="admin-deck-selected">{cards.map((card, index) => index === selectedCard ? <article className="admin-card" key={card.id}>
+        <header><strong>Card {index + 1}</strong><button type="button" className="admin-danger" onClick={() => { setCards(current => current.filter((_, i) => i !== index)); setSelectedCard(Math.max(0, index - 1)); setDirty(true); }}>Remove card</button></header>
         <div className="admin-editor-grid"><label>Card type<select value={card.cardType} onChange={e => changeCardType(index, e.target.value)}>{types.map(value => <option key={value}>{value}</option>)}</select></label><label>Section<input value={card.sectionName ?? ''} maxLength={120} onChange={e => edit(index, { sectionName: e.target.value })} /></label></div>
         {mediaField(card, index, 'prompt', card.cardType === 'images' ? 'Front image' : 'Question', card.question ?? '', value => edit(index, { question: value }), card.cardType === 'images')}
         {card.cardType === 'multiple_choice' ? <>
@@ -125,8 +127,8 @@ export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish }: { dec
           {(card.matchingLeftItems ?? ['', '']).map((text, n) => <div className="admin-editor-grid" key={n}>{mediaField(card, index, `left:${n}`, `Left ${n + 1}`, text, value => { const items = [...(card.matchingLeftItems ?? ['', ''])]; items[n] = value; edit(index, { matchingLeftItems: items }); })}{mediaField(card, index, `right:${n}`, `Right ${n + 1}`, card.matchingRightItems?.[n] ?? '', value => { const items = [...(card.matchingRightItems ?? ['', ''])]; items[n] = value; edit(index, { matchingRightItems: items }); })}</div>)}
         </> : mediaField(card, index, 'answer', card.cardType === 'images' ? 'Back image (optional)' : 'Answer', card.correctAnswer ?? '', value => edit(index, { correctAnswer: value }), card.cardType === 'images')}
         {card.cardType !== 'images' && <><label className="admin-hint-toggle"><input type="checkbox" checked={hints.has(card.id)} onChange={e => { const next = new Set(hints); if (e.target.checked) next.add(card.id); else { next.delete(card.id); edit(index, { hint: '' }); setMedia(index, 'hint', { imageID: null, audioID: null }); } setHints(next); }} />Hint</label>{hints.has(card.id) && mediaField(card, index, 'hint', 'Hint', card.hint ?? '', value => edit(index, { hint: value }))}</>}
-      </article>)}
-      <button type="button" onClick={() => { setCards(current => [...current, { id: crypto.randomUUID(), cardType: 'tap_reveal', question: '', correctAnswer: '' }]); setDirty(true); }} disabled={cards.length >= 500}>Add card</button>
+      </article> : null)}</div></div>
+      <button type="button" onClick={() => { setSelectedCard(cards.length); setCards(current => [...current, { id: crypto.randomUUID(), cardType: 'tap_reveal', question: '', correctAnswer: '' }]); setDirty(true); }} disabled={cards.length >= 500}>Add card</button>
     </>}
     </fieldset><div className="admin-editor-save"><button type="submit" disabled={saving || uploading}>Save changes</button>{onPublish && <button type="button" disabled={saving || uploading} onClick={() => void submit(true)}>Publish deck</button>}</div>
   </form></section>;

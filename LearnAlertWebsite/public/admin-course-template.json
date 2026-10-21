@@ -1,0 +1,99 @@
+{
+  "id": "example-korean",
+  "title": "Korean example",
+  "language": "Korean",
+  "flagEmoji": "🇰🇷",
+  "levelTag": "Beginner",
+  "colorHex": "#75B9DA",
+  "summary": "A small example for authoring.",
+  "estimatedHours": 1,
+  "outcomes": [
+    "Recognize a polite greeting."
+  ],
+  "units": [
+    {
+      "id": "example-unit-1",
+      "unitNumber": 1,
+      "title": "Greetings",
+      "subtitle": "First polite expressions",
+      "colorHex": "#75B9DA",
+      "badgeIcon": "book.fill",
+      "lessons": [
+        {
+          "id": "example-lesson-1",
+          "lessonNumber": 1,
+          "title": "Say hello",
+          "subtitle": "Meet a new person",
+          "nodeType": "lesson",
+          "estimatedMinutes": 3,
+          "tipNote": "안녕하세요 is polite.",
+          "cards": [
+            {
+              "id": "example-question-1",
+              "question": "Which greeting means hello?",
+              "options": [
+                "안녕하세요",
+                "감사합니다"
+              ],
+              "correctAnswer": "안녕하세요",
+              "hint": "A polite greeting.",
+              "cardType": "multipleChoice",
+              "matchingLeftItems": [],
+              "matchingRightItems": [],
+              "optionImageNames": [],
+              "explanation": "안녕하세요 is a polite way to say hello.",
+              "speechText": "안녕하세요",
+              "readingPrompt": "Choose the greeting that means hello.",
+              "conceptTag": "greetings"
+            }
+          ]
+        }
+      ],
+      "checkpointQuiz": {
+        "id": "example-checkpoint-1",
+        "title": "Greeting check",
+        "summary": "Check what you remember.",
+        "passingScoreThreshold": 0.8,
+        "questions": [
+          {
+            "id": "example-checkpoint-question-1",
+            "question": "You meet a new neighbor. Which greeting is polite?",
+            "options": [
+              "안녕하세요",
+              "감사합니다"
+            ],
+            "correctAnswer": "안녕하세요",
+            "hint": "A polite greeting.",
+            "cardType": "multipleChoice",
+            "matchingLeftItems": [],
+            "matchingRightItems": [],
+            "optionImageNames": [],
+            "explanation": "안녕하세요 is a polite way to say hello.",
+            "speechText": "안녕하세요",
+            "readingPrompt": "Choose the greeting that means hello.",
+            "conceptTag": "greetings"
+          }
+        ],
+        "keyConcepts": [
+          "greetings"
+        ]
+      }
+    }
+  ],
+  "guides": {
+    "example-unit-1": [
+      {
+        "title": "A polite hello",
+        "rule": "Use 안녕하세요 when greeting someone politely.",
+        "examples": [
+          "안녕하세요. → Hello."
+        ]
+      }
+    ]
+  },
+  "guidePresentation": {
+    "example-unit-1": {
+      "showsHangulDiagram": false
+    }
+  }
+}

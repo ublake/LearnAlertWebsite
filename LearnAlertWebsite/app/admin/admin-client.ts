@@ -16,3 +16,12 @@ export async function uploadAdminMedia(deckId: string, file: File): Promise<stri
   const response = await fetch(`/admin/api/decks/${deckId}/media`, { method: 'POST', headers: { 'Content-Type': contentType }, body: file });
   return (await responseJSON<{ id: string }>(response)).id;
 }
+
+export async function uploadCatalogMedia(entryId: string, file: File): Promise<string> {
+  const extension = file.name.split('.').at(-1)?.toLowerCase();
+  const contentType = ({ png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', mp3: 'audio/mpeg', m4a: 'audio/mp4', wav: 'audio/wav' } as Record<string, string>)[extension || ''];
+  if (!contentType) throw new Error('Use PNG/JPEG images or MP3/M4A/WAV audio.');
+  if (file.size > (contentType.startsWith('image/') ? 10 : 20) * 1024 * 1024) throw new Error(`${file.name} exceeds the ${contentType.startsWith('image/') ? 10 : 20} MB file limit.`);
+  const response = await fetch(`/admin/api/catalog/${encodeURIComponent(entryId)}/media`, { method: 'POST', headers: { 'Content-Type': contentType }, body: file });
+  return (await responseJSON<{ reference: string }>(response)).reference;
+}

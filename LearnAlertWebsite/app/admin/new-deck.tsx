@@ -6,7 +6,7 @@ import { example, instructions } from './deck-format';
 import { FormatGuide } from './format-guide';
 import type { FieldMedia } from './deck-editor';
 
-export function NewDeck({ onCreated }: { onCreated: (id: string) => Promise<void> }) {
+export function NewDeck({ onCreated, onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void; onCreated: (id: string) => Promise<void> }) {
   const [mode, setMode] = useState<'manual' | 'import'>('manual');
   const [name, setName] = useState('');
   const [owner, setOwner] = useState('official');
@@ -20,6 +20,7 @@ export function NewDeck({ onCreated }: { onCreated: (id: string) => Promise<void
   const [progress, setProgress] = useState('');
   const [copied, setCopied] = useState(false);
   useEffect(() => { void adminAPI<{ items: { id: string; handle: string }[] }>('profiles').then(page => setAuthors(page.items)).catch(e => setError((e as Error).message)); }, []);
+  useEffect(() => { onDirtyChange?.(Boolean(name || files.length || mode === 'import')); return () => onDirtyChange?.(false); }, [name, files.length, mode, onDirtyChange]);
   async function create() {
     setError(''); setBusy(true);
     try {

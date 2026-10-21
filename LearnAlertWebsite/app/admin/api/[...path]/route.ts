@@ -9,7 +9,7 @@ export async function DELETE(request: Request) { return proxy(request); }
 async function proxy(request: Request) {
   const url = new URL(request.url);
   const token = request.headers.get('Cf-Access-Jwt-Assertion');
-  const upload = request.method === 'POST' && /^\/admin\/api\/decks\/[a-fA-F0-9-]{36}\/media$/.test(url.pathname);
+  const upload = request.method === 'POST' && /^\/admin\/api\/(?:decks\/[a-fA-F0-9-]{36}|catalog\/[a-zA-Z0-9._-]+)\/media$/.test(url.pathname);
   const jsonHeaders = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
   if (!token) return new Response(JSON.stringify({ error: { message: 'Admin sign-in is required. Cloudflare Access must protect /admin and /admin/*.' } }), { status: 401, headers: jsonHeaders });
   if (request.method !== 'GET' && (request.headers.get('Origin') !== url.origin || (!upload && request.headers.get('Content-Type')?.split(';')[0] !== 'application/json'))) {
