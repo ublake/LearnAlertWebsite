@@ -36,9 +36,10 @@ test('removing cards affects only the intended draft subtree', () => {
   assert.equal(edited.units[0].checkpointQuiz.questions.length, 1);
   assert.equal(source.units[0].lessons[0].cards.length, 1);
 });
-test('blank course and unit templates store guides at the root, never an unsupported unit property', () => {
-  assert.deepEqual(blankDocument('course').guides, {});
-  assert.deepEqual(blankDocument('course').guidePresentation, {});
+test('blank language collections omit guide and checkpoint structure', () => {
+  assert.equal(blankDocument('course').presentation, 'deck_collection');
+  assert.equal(blankDocument('course').guides, undefined);
+  assert.equal(blankDocument('course').guidePresentation, undefined);
   assert.equal(templateFor('units').guideTopics, undefined);
 });
 

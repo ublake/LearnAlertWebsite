@@ -1,0 +1,48 @@
+{
+  "id": "spanish-example",
+  "title": "Spanish",
+  "language": "Spanish",
+  "flagEmoji": "🇪🇸",
+  "levelTag": "",
+  "colorHex": "#E05A47",
+  "summary": "",
+  "estimatedHours": 0,
+  "outcomes": [],
+  "presentation": "deck_collection",
+  "units": [
+    {
+      "id": "es-topics",
+      "unitNumber": 1,
+      "title": "Topic decks",
+      "subtitle": "",
+      "colorHex": "#E05A47",
+      "badgeIcon": "rectangle.stack",
+      "lessons": [
+        {
+          "id": "es-greetings",
+          "lessonNumber": 1,
+          "title": "Greetings",
+          "subtitle": "",
+          "nodeType": "lesson",
+          "estimatedMinutes": 0,
+          "cards": [
+            {
+              "id": "es-greetings-hello",
+              "cardType": "multipleChoice",
+              "question": "Hola",
+              "options": [
+                "Hello",
+                "Goodbye",
+                "Thanks",
+                "Please"
+              ],
+              "correctAnswer": "Hello",
+              "correctOptionIndex": 0,
+              "fieldMedia": {}
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

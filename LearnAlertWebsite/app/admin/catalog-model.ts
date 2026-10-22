@@ -67,7 +67,7 @@ export function duplicateDocument(document: JSONObject): JSONObject {
   return remap(next) as JSONObject;
 }
 export function blankCard(course = true): JSONObject {
-  return { id: newID('card'), question: '', options: [], correctAnswer: '', hint: '', cardType: course ? 'multipleChoice' : 'multiple_choice', matchingLeftItems: [], matchingRightItems: [], optionImageNames: [], ...(course ? {} : { fieldMedia: {}, sectionName: '' }) };
+  return { id: newID('card'), question: '', options: course ? ['', '', '', ''] : [], correctAnswer: '', hint: '', cardType: course ? 'multipleChoice' : 'multiple_choice', matchingLeftItems: [], matchingRightItems: [], optionImageNames: [], ...(course ? {correctOptionIndex:0,fieldMedia:{}} : { fieldMedia: {}, sectionName: '' }) };
 }
 export function templateFor(field: string): JSONObject {
   if (field === 'units') return { id: newID('unit'), unitNumber: 1, title: 'New unit', subtitle: '', colorHex: '#75B9DA', badgeIcon: 'book.fill', lessons: [] };
@@ -80,7 +80,7 @@ export function templateFor(field: string): JSONObject {
   return blankCard();
 }
 export function blankDocument(kind: CatalogKind): JSONObject {
-  return kind === 'course' ? { id: newID('course'), title: 'Untitled course', language: '', flagEmoji: '🌱', levelTag: 'Beginner', colorHex: '#75B9DA', summary: '', estimatedHours: 1, outcomes: [], units: [], guides: {}, guidePresentation: {} } : { id: newID('exam'), name: 'Untitled exam deck', category: 'Exam Prep', subcategory: '', description: '', colorHex: '#75B9DA', deckType: 'Mixed', cards: [] };
+  return kind === 'course' ? { id: newID('course'), title: 'New language collection', language: '', flagEmoji: '🌱', levelTag: '', colorHex: '#75B9DA', summary: '', estimatedHours: 0, outcomes: [], units: [], presentation:'deck_collection' } : { id: newID('exam'), name: 'Untitled exam deck', category: 'Exam Prep', subcategory: '', description: '', colorHex: '#75B9DA', deckType: 'Mixed', cards: [] };
 }
 export type TreeNode = { path: NodePath; label: string; type: string; detail?: string; children: TreeNode[] };
 export function documentTree(document: JSONObject, kind: CatalogKind): TreeNode {
@@ -133,6 +133,7 @@ export const fieldChoices: Record<string, string[]> = {
 };
 
 export function legacyPublicationBlocked(record: CatalogRecord, document: JSONObject): boolean {
+  if (document.presentation === 'deck_collection') return false;
   const learning = document.learning;
   return (record.id === 'spanish-course' && record.publishedRevision != null) || !!record.deliveries?.some(x => ['practice-v1','practice-v2'].includes(x.profile)) || !!(learning && typeof learning === 'object' && !Array.isArray(learning) && learning.starter);
 }
