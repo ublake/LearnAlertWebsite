@@ -720,6 +720,38 @@
                   }
                 }
               }
+            },
+            "starter": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "Draft/development preview only. Publication blocked until client capability rollout.",
+              "required": [
+                "id",
+                "revision",
+                "lessonIDs",
+                "assessment"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "revision": {
+                  "type": "string"
+                },
+                "lessonIDs": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "assessment": {
+                  "$ref": "#/$defs/starterAssessment"
+                }
+              }
             }
           }
         }
@@ -797,7 +829,9 @@
           "enum": [
             "pictureChoice",
             "wordBank",
-            "exposure"
+            "exposure",
+            "choice",
+            "matching"
           ]
         },
         "vocabularyIDs": {
@@ -875,6 +909,95 @@
             "type": "array",
             "items": {
               "type": "string"
+            }
+          }
+        },
+        "choices": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "text"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "prerequisiteIDs": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "stimulusText": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stimulusCount": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 2
+        },
+        "pairs": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "label",
+              "image",
+              "description",
+              "vocabularyIDs",
+              "conceptIDs"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "image": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "vocabularyIDs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              },
+              "conceptIDs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              }
             }
           }
         }
@@ -959,8 +1082,133 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "format": {
+                "const": "choice"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "choices",
+              "correctChoiceID"
+            ],
+            "properties": {
+              "choices": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 6
+              },
+              "correctChoiceID": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "format": {
+                "const": "matching"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "pairs"
+            ],
+            "properties": {
+              "pairs": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
         }
       ]
+    },
+    "starterAssessment": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "revision",
+        "lessonIDs",
+        "forms",
+        "objectiveIDs",
+        "passingTotal",
+        "passingPerObjective"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "lessonIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "objectiveIDs": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "string"
+          }
+        },
+        "passingTotal": {
+          "const": 10
+        },
+        "passingPerObjective": {
+          "const": 2
+        },
+        "forms": {
+          "type": "object",
+          "minProperties": 2,
+          "maxProperties": 2,
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 12,
+            "maxItems": 12,
+            "items": {
+              "type": "object",
+              "required": [
+                "card",
+                "objectiveID",
+                "remediationLessonIDs"
+              ],
+              "properties": {
+                "card": {
+                  "$ref": "#/$defs/courseCard"
+                },
+                "objectiveID": {
+                  "type": "string"
+                },
+                "remediationLessonIDs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -51,3 +51,14 @@ test('practice duplication preserves card-scoped choice identities and course-sc
  assert.deepEqual(exercise.vocabularyIDs,['es.libro.object']);assert.deepEqual(copy.learning,source.learning);
  assert.equal(source.units[0].lessons[0].cards[0].activity.exercise.correctChoiceID,'book-choice');
 });
+
+test('whole-course cloning remaps starter lesson/prerequisite links but retains stable concepts and pair identity',()=>{
+ const source=fixture(),lesson=source.units[0].lessons[0],first=lesson.cards[0];
+ const second={...structuredClone(first),id:'second-card'};lesson.cards.push(second);
+ second.activity={kind:'situation',sequence:2,exercise:{format:'choice',prerequisiteIDs:[first.id],conceptIDs:['sense-stays'],vocabularyIDs:['lex-stays'],choices:[{id:'correct',text:'el libro'}],correctChoiceID:'correct'}};
+ source.learning={vocabulary:{},concepts:{},starter:{id:'starter',revision:'pilot-1',lessonIDs:[lesson.id],assessment:{id:'check',lessonIDs:[lesson.id],forms:{a:[{card:{...first,id:'assessment-question'},objectiveID:'objective-stays',remediationLessonIDs:[lesson.id]}]}}}};
+ const copy=duplicateDocument(source),nextLesson=copy.units[0].lessons[0];
+ assert.deepEqual(nextLesson.cards[1].activity.exercise.prerequisiteIDs,[nextLesson.cards[0].id]);
+ assert.deepEqual(copy.learning.starter.lessonIDs,[nextLesson.id]);assert.deepEqual(copy.learning.starter.assessment.lessonIDs,[nextLesson.id]);assert.deepEqual(copy.learning.starter.assessment.forms.a[0].remediationLessonIDs,[nextLesson.id]);
+ assert.deepEqual(nextLesson.cards[1].activity.exercise.conceptIDs,['sense-stays']);assert.equal(nextLesson.cards[1].activity.exercise.correctChoiceID,'correct');
+});

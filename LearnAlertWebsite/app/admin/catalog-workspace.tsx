@@ -258,6 +258,8 @@ function CatalogCardPreview({ card }: { card: JSONObject }) {
           <p>{String(picture.description)}</p>{picture.id === exercise.correctChoiceID && <small>Correct choice</small>}
         </div>)}
       </div>}
+      {exercise.format === 'choice' && <>{media('prompt', card.promptImageName)}{typeof exercise.stimulusText === 'string' && <p>{exercise.stimulusText}</p>}<div style={{display:'grid',gap:12}}>{(Array.isArray(exercise.choices) ? exercise.choices as JSONObject[] : []).map(choice=><div key={String(choice.id)} style={{padding:16,border:'1px solid currentColor',borderRadius:12}}>{String(choice.text)}{choice.id === exercise.correctChoiceID && <small> · Correct choice</small>}</div>)}</div></>}
+      {exercise.format === 'matching' && <><p>Tap a label, then its picture. Only independently selected pairs provide pair evidence.</p>{(Array.isArray(exercise.pairs) ? exercise.pairs as JSONObject[] : []).map((pair,index)=><div key={String(pair.id)}><strong>{String(pair.label)}</strong>{media(`right:${index}`,pair.image)}<span>{String(pair.description)}</span></div>)}</>}
       {exercise.format === 'wordBank' && <><p>Tap words to build a sentence in the app.</p><div style={{display:'flex',flexWrap:'wrap',gap:8}}>{tiles.map(tile => <span key={String(tile.id)} style={{padding:'10px 14px',border:'1px solid currentColor',borderRadius:12}}>{String(tile.text)}</span>)}</div></>}
       {exercise.format === 'exposure' && <>{media('prompt', card.promptImageName)}<p>{String(card.correctAnswer || '')}</p><p>{String(card.hint || '')}</p></>}
       {activity?.rule && <details><summary>Optional Why?</summary><p>{String(activity.rule)}</p></details>}

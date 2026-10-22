@@ -26,9 +26,7 @@ export function removeAt(value: JSONValue, path: NodePath): JSONValue {
 }
 export function newID(prefix: string) { return `${prefix}-${crypto.randomUUID().slice(0, 12)}`; }
 export function duplicateNode(value: JSONValue): JSONValue {
-  if (Array.isArray(value)) return value.map(duplicateNode);
-  if (!value || typeof value !== 'object') return value;
-  return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, key === 'id' && typeof item === 'string' ? newID(item.split('-')[0] || 'copy') : key === 'exercise' ? structuredClone(item) : duplicateNode(item)]));
+  return value && typeof value === 'object' && !Array.isArray(value) ? duplicateDocument(value as JSONObject) : Array.isArray(value) ? value.map(duplicateNode) : value;
 }
 export function duplicateDocument(document: JSONObject): JSONObject {
   const idMap = new Map<string, string>();
@@ -46,7 +44,20 @@ export function duplicateDocument(document: JSONObject): JSONObject {
     const map = next[field];
     if (map && typeof map === 'object' && !Array.isArray(map)) next[field] = Object.fromEntries(Object.entries(map).map(([key, value]) => [idMap.get(key) || key, value]));
   }
-  return next;
+  const remap = (value: JSONValue): JSONValue => {
+    if (Array.isArray(value)) return value.map(remap);
+    if (!value || typeof value !== 'object') return value;
+    return Object.fromEntries(Object.entries(value).map(([key,item]) => {
+      if (key === 'exercise' && item && typeof item === 'object' && !Array.isArray(item)) {
+        const exercise = structuredClone(item) as JSONObject;
+        if (Array.isArray(exercise.prerequisiteIDs)) exercise.prerequisiteIDs = exercise.prerequisiteIDs.map(id => typeof id === 'string' ? idMap.get(id) || id : id);
+        return [key,exercise];
+      }
+      if (['lessonIDs','remediationLessonIDs'].includes(key) && Array.isArray(item)) return [key,item.map(id=>typeof id === 'string' ? idMap.get(id) || id : id)];
+      return [key,remap(item)];
+    }));
+  };
+  return remap(next) as JSONObject;
 }
 export function blankCard(course = true): JSONObject {
   return { id: newID('card'), question: '', options: [], correctAnswer: '', hint: '', cardType: course ? 'multipleChoice' : 'multiple_choice', matchingLeftItems: [], matchingRightItems: [], optionImageNames: [], ...(course ? {} : { fieldMedia: {}, sectionName: '' }) };
