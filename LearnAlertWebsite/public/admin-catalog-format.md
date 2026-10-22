@@ -75,3 +75,18 @@ Only bind actual uploaded `catalog:UUID` media owned by this course. Owner-unapp
 
 
 The current route contract keeps existing lesson card membership and existing checkpoint definitions unchanged. Add retrieval variants in new lessons, and extend checkpoint-bearing material in new units. Visual starter units currently use the scoped assessment rather than unit checkpoints; checkpoint-bearing starter routes need a later compatible contract. These bounds prevent a content update from silently adding mastery requirements to an already assigned route.
+
+
+## Practice v2: short phrases and a finite café
+
+`practice-v2` requires `exercise-v1,matching-evidence-v1,finite-bank-v1,route-v1,assessment-v1,text-matching-v1,finite-dialogue-v1`. It uses a separate immutable delivery/cache namespace. The default legacy representation and practice-v1 release remain independent; a v2-capable reader may receive a v1 item when no v2 release is active. Missing/partial/unknown capabilities never select v2. The normal Publish path remains blocked for managed Spanish.
+
+`textMatching` reuses explicit two-pair IDs and per-pair evidence with `image:""`, Spanish `label` and English `description`; it has no fictitious image. The final forced pair remains dependent evidence. Optional `exercise.models` contains short `{spanish,meaning}` unscored reveal lines. `showsMeaningLabels` keeps disambiguating English image cues visible.
+
+`exercise.context` may contain `cashierText`, `goalText`, `goalFeedback`, `goalMismatchChoiceIDs`, `goalMismatchOrders`, and paired `dialogueID`/`dialogueStepID`. A valid alternative goal is not bad Spanish; those variants do not advance the fixed task and never replace first-response evidence. All finite bank orders must fit the offered tile inventory, including repeated occurrences. Whole chunks stay intact. New meanings need new lexical/concept IDs; authored presentation fixes do not transfer credit to a different meaning.
+
+`learning.dialogues` maps stable IDs to `{id,revision,lessonID,title,goal,briefing,steps}`. This version supports the reviewed seven-action café over six turns, with distinct amount/handover substeps. Steps carry `{id,cardID,turn,substep,updates}` and fixed validated order mutations; no executable script, arbitrary chatbot or per-answer synthesis is accepted. Each active attempt freezes its definition/cards. Completion of the visit is separate from its three mixed checks and never establishes unrestricted conversation, speaking or listening mastery. Full visits are in-app; notifications hand off.
+
+Cashier `audioReference` is optional stored catalog media. Publication requires explicit `learning.audioQA:{status:"owner-approved",reviewNote:"…"}`; pending private QA is not approval. The checked-in pilot has no audio references and is fully readable. Private preview files are app-local developer supplies, never committed recordings or live audio activation. Every playback is deliberate, with synthetic-voice disclosure; no autoplay, paid inference or fallback English voice.
+
+Append L03–L06 under a new starter revision, preserving the original unit/lesson/card identities and original completion denominator. Existing route adoption is explicit and keeps Continue/session anchors. `pf-sp-a01` and its two forms still grant only L01–L02; access credit is not fabricated study/SRS. Production cutover remains an atomic migration/review gate; preparing this JSON does not publish or expose paused draft r10.

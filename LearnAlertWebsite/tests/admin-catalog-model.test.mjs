@@ -78,3 +78,26 @@ test('compatible delivery controls never submit the paused saved document or use
  assert.deepEqual(record.document,{id:'spanish-course',title:'Paused expansion'});
  assert.equal(legacyPublicationBlocked({...record,id:'korean-course',publishedRevision:null,deliveries:[]},{}),false);
 });
+
+
+test('v2 release controls require the selected capability profile and retain unknown café authoring data',async()=>{
+ const {deliveryRequest,legacyPublicationBlocked}=await import('../app/admin/catalog-model.ts');
+ const record={id:'spanish-course',kind:'course',status:'published',revision:10,publishedRevision:9,document:{title:'Paused r10'},deliveries:[{profile:'practice-v1',revision:11,state:'candidate'},{profile:'practice-v2',revision:12,state:'candidate'}]};
+ const additions={units:[{id:'starter'}],learning:{dialogues:{cafe:{id:'cafe',reviewExtension:{keep:true}}}}};
+ assert.equal(deliveryRequest(record,'prepare',additions,undefined,'practice-v2').profile,'practice-v2');
+ assert.equal(deliveryRequest(record,'activate',undefined,12,'practice-v2').deliveryRevision,12);
+ assert.throws(()=>deliveryRequest(record,'activate',undefined,11,'practice-v2'));
+ assert.throws(()=>deliveryRequest(record,'prepare',additions,undefined,'unknown'));
+ assert.equal(legacyPublicationBlocked({...record,publishedRevision:null},{}),true);
+ assert.equal(additions.learning.dialogues.cafe.reviewExtension.keep,true);assert.deepEqual(record.document,{title:'Paused r10'});
+});
+
+test('cloning a café remaps its lesson/card/step references while retaining finite tile and semantic identities',()=>{
+ const source=fixture(),lesson=source.units[0].lessons[0],card=lesson.cards[0];
+ card.activity={kind:'situation',exercise:{format:'choice',conceptIDs:['meaning'],vocabularyIDs:['sense'],choices:[{id:'reply',text:'Con leche'}],correctChoiceID:'reply',context:{dialogueID:'cafe',dialogueStepID:'step',goalMismatchChoiceIDs:[],futureContext:{keep:true}}}};
+ source.learning={dialogues:{cafe:{id:'cafe',revision:'one',lessonID:lesson.id,steps:[{id:'step',cardID:card.id,turn:1,substep:'reply',updates:{milk:'with_milk'}}]}}};
+ const copy=duplicateDocument(source),nextLesson=copy.units[0].lessons[0],nextCard=nextLesson.cards[0],definition=Object.values(copy.learning.dialogues)[0];
+ assert.equal(copy.learning.dialogues[definition.id],definition);assert.equal(definition.lessonID,nextLesson.id);assert.equal(definition.steps[0].cardID,nextCard.id);
+ assert.equal(nextCard.activity.exercise.context.dialogueID,definition.id);assert.equal(nextCard.activity.exercise.context.dialogueStepID,definition.steps[0].id);
+ assert.equal(nextCard.activity.exercise.correctChoiceID,'reply');assert.deepEqual(nextCard.activity.exercise.vocabularyIDs,['sense']);assert.deepEqual(nextCard.activity.exercise.context.futureContext,{keep:true});
+});

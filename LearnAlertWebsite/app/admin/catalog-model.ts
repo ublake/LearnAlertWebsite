@@ -52,8 +52,14 @@ export function duplicateDocument(document: JSONObject): JSONObject {
       if (key === 'exercise' && item && typeof item === 'object' && !Array.isArray(item)) {
         const exercise = structuredClone(item) as JSONObject;
         if (Array.isArray(exercise.prerequisiteIDs)) exercise.prerequisiteIDs = exercise.prerequisiteIDs.map(id => typeof id === 'string' ? idMap.get(id) || id : id);
+        if (exercise.context && typeof exercise.context === 'object' && !Array.isArray(exercise.context)) {
+          const context = exercise.context as JSONObject;
+          for (const name of ['dialogueID','dialogueStepID']) if (typeof context[name] === 'string') context[name] = idMap.get(context[name] as string) || context[name];
+        }
         return [key,exercise];
       }
+      if (key === 'dialogues' && item && typeof item === 'object' && !Array.isArray(item)) return [key,Object.fromEntries(Object.entries(item).map(([id,definition])=>[idMap.get(id) || id,remap(definition)]))];
+      if (['lessonID','cardID'].includes(key) && typeof item === 'string') return [key,idMap.get(item) || item];
       if (['lessonIDs','remediationLessonIDs'].includes(key) && Array.isArray(item)) return [key,item.map(id=>typeof id === 'string' ? idMap.get(id) || id : id)];
       return [key,remap(item)];
     }));
@@ -128,18 +134,19 @@ export const fieldChoices: Record<string, string[]> = {
 
 export function legacyPublicationBlocked(record: CatalogRecord, document: JSONObject): boolean {
   const learning = document.learning;
-  return (record.id === 'spanish-course' && record.publishedRevision != null) || !!record.deliveries?.some(x => x.profile === 'practice-v1') || !!(learning && typeof learning === 'object' && !Array.isArray(learning) && learning.starter);
+  return (record.id === 'spanish-course' && record.publishedRevision != null) || !!record.deliveries?.some(x => ['practice-v1','practice-v2'].includes(x.profile)) || !!(learning && typeof learning === 'object' && !Array.isArray(learning) && learning.starter);
 }
-export function deliveryRequest(record: CatalogRecord, operation: string, additions?: JSONValue, deliveryRevision?: number): JSONObject {
+export function deliveryRequest(record: CatalogRecord, operation: string, additions?: JSONValue, deliveryRevision?: number, profile: string = 'practice-v1'): JSONObject {
   if (record.kind !== 'course' || !['prepare','activate','rollback','withdraw','restoreApproved'].includes(operation)) throw new Error('Choose an explicit course delivery action.');
   if (operation !== 'restoreApproved' && (!record.publishedRevision || record.status !== 'published')) throw new Error('A published legacy source is required.');
-  const body: JSONObject = {operation, profile:'practice-v1', expectedRevision:record.revision};
+  if (!['practice-v1','practice-v2'].includes(profile)) throw new Error('Choose a supported delivery profile.');
+  const body: JSONObject = {operation, profile, expectedRevision:record.revision};
   if (operation === 'prepare') {
     if (!additions || typeof additions !== 'object' || Array.isArray(additions) || !Array.isArray(additions.units) || !additions.units.length || !additions.learning || Object.keys(additions).some(key => !['units','learning'].includes(key))) throw new Error('Provide only new units and learning metadata. The saved draft is not a release source.');
     body.sourceRevision = record.publishedRevision!; body.additions = additions;
   }
   if (operation === 'activate' || operation === 'rollback') {
-    const selected = record.deliveries?.find(x=>x.profile === 'practice-v1' && x.revision === deliveryRevision);
+    const selected = record.deliveries?.find(x=>x.profile === profile && x.revision === deliveryRevision);
     if (!selected || (operation === 'rollback' && !selected.activatedAt)) throw new Error('Select a reviewed candidate or a previously activated rollback revision.');
     body.deliveryRevision = selected.revision;
   }
