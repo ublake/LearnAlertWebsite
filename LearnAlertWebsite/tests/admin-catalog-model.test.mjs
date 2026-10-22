@@ -41,3 +41,13 @@ test('blank course and unit templates store guides at the root, never an unsuppo
   assert.deepEqual(blankDocument('course').guidePresentation, {});
   assert.equal(templateFor('units').guideTopics, undefined);
 });
+
+
+test('practice duplication preserves card-scoped choice identities and course-scoped lexical senses',()=>{
+ const source=fixture();source.learning={vocabulary:{'es.libro.object':{lemma:'libro',meaning:'book',locale:'es-ES'}},concepts:{recognize:{title:'Recognize',prerequisiteIDs:[],vocabularyIDs:['es.libro.object']}}};
+ source.units[0].lessons[0].cards[0].activity={kind:'situation',sequence:1,exercise:{format:'pictureChoice',vocabularyIDs:['es.libro.object'],conceptIDs:['recognize'],pictures:[{id:'book-choice',image:'catalog:uploaded-reference',description:'A book'}],correctChoiceID:'book-choice'}};
+ const copy=duplicateDocument(source),exercise=copy.units[0].lessons[0].cards[0].activity.exercise;
+ assert.equal(exercise.pictures[0].id,'book-choice');assert.equal(exercise.correctChoiceID,exercise.pictures[0].id);
+ assert.deepEqual(exercise.vocabularyIDs,['es.libro.object']);assert.deepEqual(copy.learning,source.learning);
+ assert.equal(source.units[0].lessons[0].cards[0].activity.exercise.correctChoiceID,'book-choice');
+});

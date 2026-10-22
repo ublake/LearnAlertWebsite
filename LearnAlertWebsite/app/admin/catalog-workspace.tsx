@@ -245,6 +245,26 @@ function CatalogCardPreview({ card }: { card: JSONObject }) {
     const imageName = String(field.image || field.imageID || image || ''), audioName = String(field.audio || field.audioID || audio || '');
     return <>{imageName && (imageURL(imageName) ? <img src={imageURL(imageName)!} alt={friendly(key)} /> : <code>Bundled image: {imageName}</code>)}{audioName && (imageURL(audioName) ? <audio controls preload="none" src={imageURL(audioName)!} aria-label={`${friendly(key)} audio`} /> : <code>Bundled audio: {audioName}</code>)}</>;
   }
+  const activity = card.activity && typeof card.activity === 'object' && !Array.isArray(card.activity) ? card.activity as JSONObject : null;
+  const exercise = activity?.exercise && typeof activity.exercise === 'object' && !Array.isArray(activity.exercise) ? activity.exercise as JSONObject : null;
+  if (exercise && ['pictureChoice', 'wordBank', 'exposure'].includes(String(exercise.format))) {
+    const pictures = Array.isArray(exercise.pictures) ? exercise.pictures as JSONObject[] : [];
+    const tiles = Array.isArray(exercise.tiles) ? exercise.tiles as JSONObject[] : [];
+    return <article className="catalog-card-preview">
+      <small>Practice preview · {String(exercise.format)}</small><h3>{String(card.question || '')}</h3>
+      {exercise.format === 'pictureChoice' && <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))',gap:12}}>
+        {pictures.map(picture => <div key={String(picture.id)} style={{padding:12,border:'1px solid currentColor',borderRadius:14}}>
+          {imageURL(String(picture.image)) ? <img src={imageURL(String(picture.image))!} alt={String(picture.description)} style={{objectFit:'contain',height:124,width:'100%',background:'transparent'}}/> : <p>Missing uploaded picture reference</p>}
+          <p>{String(picture.description)}</p>{picture.id === exercise.correctChoiceID && <small>Correct choice</small>}
+        </div>)}
+      </div>}
+      {exercise.format === 'wordBank' && <><p>Tap words to build a sentence in the app.</p><div style={{display:'flex',flexWrap:'wrap',gap:8}}>{tiles.map(tile => <span key={String(tile.id)} style={{padding:'10px 14px',border:'1px solid currentColor',borderRadius:12}}>{String(tile.text)}</span>)}</div></>}
+      {exercise.format === 'exposure' && <>{media('prompt', card.promptImageName)}<p>{String(card.correctAnswer || '')}</p><p>{String(card.hint || '')}</p></>}
+      {activity?.rule && <details><summary>Optional Why?</summary><p>{String(activity.rule)}</p></details>}
+      <details><summary>Reviewed answer and links</summary><p>{String(card.correctAnswer)}</p><pre>{JSON.stringify({vocabularyIDs:exercise.vocabularyIDs,conceptIDs:exercise.conceptIDs,acceptedOrders:exercise.acceptedOrders},null,2)}</pre></details>
+      <small>Author preview; native interaction and accessibility still require device verification.</small>
+    </article>;
+  }
   return <article className="catalog-card-preview"><small>{String(card.cardType || 'Card')}</small>{media('prompt', card.promptImageName, card.promptAudioName)}<h3>{String(card.question || '')}</h3>{card.speechText && <p>🔊 {String(card.speechText)}</p>}{Array.isArray(card.options) && card.options.length > 0 && <ol>{card.options.map((option, index) => <li key={index} className={index === card.correctOptionIndex || option === card.correctAnswer ? 'is-correct' : ''}>{media(`option:${index}`, Array.isArray(card.optionImageNames) ? card.optionImageNames[index] : undefined)}{String(option)}{(index === card.correctOptionIndex || option === card.correctAnswer) && <b> ✓</b>}</li>)}</ol>}{Array.isArray(card.matchingLeftItems) && card.matchingLeftItems.length > 0 && <dl>{card.matchingLeftItems.map((left, index) => <div key={index}><dt>{media(`left:${index}`)}{String(left)}</dt><dd>{media(`right:${index}`)}{String((card.matchingRightItems as JSONValue[] || [])[index] || '')}</dd></div>)}</dl>}<div className="catalog-preview-answer"><small>Answer</small>{media('answer', card.answerImageName)}<p>{String(card.correctAnswer || '')}</p></div>{card.hint && <p><small>Hint</small> {String(card.hint)}</p>}{media('hint')}{card.explanation && <p>{String(card.explanation)}</p>}{card.grammarNote && <p>{String(card.grammarNote)}</p>}{card.vocabularyItem && typeof card.vocabularyItem === 'object' && <dl>{Object.entries(card.vocabularyItem).map(([key,value]) => value ? <div key={key}><dt>{friendly(key)}</dt><dd>{String(value)}</dd></div> : null)}</dl>}<small>Content preview. The app supplies its own interactive layout.</small></article>;
 }
 function CatalogHelp({ kind, onClose }: { kind: CatalogKind; onClose: () => void }) {

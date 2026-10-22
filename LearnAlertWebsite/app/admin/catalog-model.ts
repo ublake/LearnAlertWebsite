@@ -28,7 +28,7 @@ export function newID(prefix: string) { return `${prefix}-${crypto.randomUUID().
 export function duplicateNode(value: JSONValue): JSONValue {
   if (Array.isArray(value)) return value.map(duplicateNode);
   if (!value || typeof value !== 'object') return value;
-  return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, key === 'id' && typeof item === 'string' ? newID(item.split('-')[0] || 'copy') : duplicateNode(item)]));
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, key === 'id' && typeof item === 'string' ? newID(item.split('-')[0] || 'copy') : key === 'exercise' ? structuredClone(item) : duplicateNode(item)]));
 }
 export function duplicateDocument(document: JSONObject): JSONObject {
   const idMap = new Map<string, string>();
@@ -36,6 +36,7 @@ export function duplicateDocument(document: JSONObject): JSONObject {
     if (Array.isArray(value)) return value.map(copy);
     if (!value || typeof value !== 'object') return value;
     return Object.fromEntries(Object.entries(value).map(([key, item]) => {
+      if (key === 'exercise') return [key, structuredClone(item)];
       if (key !== 'id' || typeof item !== 'string') return [key, copy(item)];
       const id = newID(item.split('-')[0] || 'copy'); idMap.set(item, id); return [key, id];
     }));

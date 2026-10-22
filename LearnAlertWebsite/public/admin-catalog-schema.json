@@ -135,6 +135,16 @@
         },
         "practiceGroup": {
           "type": "string"
+        },
+        "exercise": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/practiceExercise"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -638,6 +648,80 @@
           "additionalProperties": {
             "$ref": "#/$defs/guidePresentation"
           }
+        },
+        "learning": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "vocabulary",
+            "concepts"
+          ],
+          "properties": {
+            "vocabulary": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "required": [
+                  "lemma",
+                  "meaning",
+                  "locale"
+                ],
+                "properties": {
+                  "lemma": {
+                    "type": "string"
+                  },
+                  "meaning": {
+                    "type": "string"
+                  },
+                  "locale": {
+                    "type": "string"
+                  },
+                  "article": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "image": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            },
+            "concepts": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "prerequisiteIDs",
+                  "vocabularyIDs"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "prerequisiteIDs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "vocabularyIDs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       },
       "required": [
@@ -700,6 +784,183 @@
         "cards"
       ],
       "additionalProperties": true
+    },
+    "practiceExercise": {
+      "type": "object",
+      "required": [
+        "format",
+        "vocabularyIDs",
+        "conceptIDs"
+      ],
+      "properties": {
+        "format": {
+          "enum": [
+            "pictureChoice",
+            "wordBank",
+            "exposure"
+          ]
+        },
+        "vocabularyIDs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "conceptIDs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "pictures": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "image",
+              "description"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "image": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "correctChoiceID": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tiles": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "text"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "acceptedOrders": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "format": {
+                "const": "pictureChoice"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "pictures",
+              "correctChoiceID"
+            ],
+            "properties": {
+              "pictures": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 4,
+                "items": {
+                  "properties": {
+                    "id": {
+                      "minLength": 1
+                    },
+                    "image": {
+                      "minLength": 1
+                    },
+                    "description": {
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              "correctChoiceID": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "format": {
+                "const": "wordBank"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "tiles",
+              "acceptedOrders"
+            ],
+            "properties": {
+              "tiles": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 40,
+                "items": {
+                  "properties": {
+                    "id": {
+                      "minLength": 1
+                    },
+                    "text": {
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              "acceptedOrders": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "items": {
+                  "minItems": 1
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }
