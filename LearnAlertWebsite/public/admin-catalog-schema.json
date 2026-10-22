@@ -726,7 +726,7 @@
                 "object",
                 "null"
               ],
-              "description": "Draft/development preview only. Publication blocked until client capability rollout.",
+              "description": "Modern starter routes require an explicit compatible delivery release; the normal Publish path stays legacy-safe.",
               "required": [
                 "id",
                 "revision",
@@ -743,10 +743,10 @@
                 "lessonIDs": {
                   "type": "array",
                   "minItems": 2,
-                  "maxItems": 2,
                   "items": {
                     "type": "string"
-                  }
+                  },
+                  "uniqueItems": true
                 },
                 "assessment": {
                   "$ref": "#/$defs/starterAssessment"

@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { adminAPI, uploadCatalogMedia } from './admin-client';
 import { JSONInspector, OptionalCardFields } from './catalog-inspector';
-import { atPath, blankCard, blankDocument, countDocument, documentTree, duplicateDocument, duplicateNode, friendly, removeAt, replaceAt, templateFor, type CatalogKind, type CatalogRecord, type CatalogSummary, type JSONObject, type JSONValue, type NodePath, type TreeNode } from './catalog-model';
+import { deliveryRequest, legacyPublicationBlocked, atPath, blankCard, blankDocument, countDocument, documentTree, duplicateDocument, duplicateNode, friendly, removeAt, replaceAt, templateFor, type CatalogKind, type CatalogRecord, type CatalogSummary, type JSONObject, type JSONValue, type NodePath, type TreeNode } from './catalog-model';
 
 type Validation = { valid?: boolean; errors?: (string | { path?: string; message?: string })[]; warnings?: (string | { path?: string; message?: string })[] };
 const stamp = (time?: number) => time ? new Date(time < 1e12 ? time * 1000 : time).toLocaleString() : 'Never';
@@ -39,6 +39,8 @@ export function CatalogWorkspace({ kind, onDirtyChange }: { kind: CatalogKind; o
   const [jsonScope, setJSONScope] = useState<'selection' | 'document'>('selection');
   const [validation, setValidation] = useState<Validation | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [deliveryPreview, setDeliveryPreview] = useState<JSONObject | null>(null);
+  const [deliveryJSON, setDeliveryJSON] = useState('{"units":[],"learning":{}}');
   const [history, setHistory] = useState<{ revision: number; action?: string; actor?: string; createdAt?: number }[] | null>(null);
   const [pendingDelete, setPendingDelete] = useState(false);
   const [conflict, setConflict] = useState(false);
@@ -61,7 +63,7 @@ export function CatalogWorkspace({ kind, onDirtyChange }: { kind: CatalogKind; o
   const counts = useMemo(() => document ? countDocument(document) : null, [document]);
   const visible = items.filter(item => (filter === 'all' || item.status === filter) && `${item.title || item.name || item.id} ${item.id}`.toLowerCase().includes(search.toLowerCase()));
   function canLeave() { return !dirty || window.confirm('Discard unsaved changes? Download JSON first if you want to keep a local copy.'); }
-  function accept(data: CatalogRecord) { setRecord(data); setDocument(data.document); setSortOrder(String(data.sortOrder ?? 0)); setPath([]); setDirty(false); setEditor('fields'); setValidation(null); setHistory(null); setPendingDelete(false); setConflict(false); setUploaded([]); }
+  function accept(data: CatalogRecord) { setDeliveryPreview(null); setRecord(data); setDocument(data.document); setSortOrder(String(data.sortOrder ?? 0)); setPath([]); setDirty(false); setEditor('fields'); setValidation(null); setHistory(null); setPendingDelete(false); setConflict(false); setUploaded([]); }
   async function open(id: string, force = false) {
     if (!force && !canLeave()) return;
     const sequence = ++requestSequence.current;
@@ -89,6 +91,23 @@ export function CatalogWorkspace({ kind, onDirtyChange }: { kind: CatalogKind; o
     if (jsonScope === 'document' && (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))) throw new Error('The complete document must be one JSON object.');
     return (jsonScope === 'document' ? parsed : replaceAt(document, path, parsed)) as JSONObject;
   }
+  async function previewDelivery(revision: number) {
+    if (!record) return;
+    setBusy(true); setError('');
+    try { const response = await adminAPI<{item: CatalogRecord}>(`catalog/${record.id}?revision=${revision}`); setDeliveryPreview(response.item.document); }
+    catch(e) { setError((e as Error).message); } finally { setBusy(false); }
+  }
+  async function delivery(operation: string, revision?: number) {
+    if (!record) return;
+    try {
+      const body = deliveryRequest(record, operation, operation === 'prepare' ? JSON.parse(deliveryJSON) : undefined, revision);
+      if (operation !== 'prepare' && !window.confirm(`${operation} practice-v1 ${revision ? `r${revision}` : ''}? Legacy content and the saved draft remain separate.`)) return;
+      setBusy(true); setError('');
+      const response = await adminAPI<{item: CatalogRecord}>(`catalog/${record.id}/delivery`, {method:'POST',body:JSON.stringify(body)});
+      accept(response.item); await loadItems();
+      setNotice(operation === 'prepare' ? 'Private candidate prepared from the named legacy revision. Review it before activation. The saved draft was not changed.' : 'Delivery action completed. The saved draft was not changed.');
+    } catch(e) {setError((e as Error).message);} finally {setBusy(false);}
+  }
   async function validateDraft() {
     if (!record) return;
     setBusy(true); setError('');
@@ -100,6 +119,8 @@ export function CatalogWorkspace({ kind, onDirtyChange }: { kind: CatalogKind; o
     setBusy(true); setError(''); setNotice('');
     try {
       const next = draftWithJSON();
+      if (!next) throw new Error('Open the document before saving.');
+      if (publish && legacyPublicationBlocked(record, next)) throw new Error('Use the explicit compatible delivery workflow. The saved draft will not be published.');
       if (!sortOrder.trim() || !Number.isFinite(Number(sortOrder))) throw new Error('Enter a finite number for the catalog order. Lower numbers appear first.');
       const saved = await adminAPI<{ item: CatalogRecord }>(`catalog/${record.id}`, { method: 'PUT', body: JSON.stringify({ document: next, sortOrder: Number(sortOrder), expectedRevision: record.revision }) });
       accept(saved.item);
@@ -218,7 +239,16 @@ export function CatalogWorkspace({ kind, onDirtyChange }: { kind: CatalogKind; o
       {(notice || mediaProgress) && <p className="catalog-notice" role="status">{mediaProgress || notice}</p>}
       {showHelp && <CatalogHelp kind={kind} onClose={() => setShowHelp(false)} />}
       {record && document && tree ? <>
-        <header className="catalog-document-header"><div><h2>{String(document.title || document.name || 'Untitled')}</h2><div className="catalog-document-meta"><span className={`catalog-status status-${record.status}`}>{record.status}</span><code>{record.id}</code><span>Draft r{record.revision}</span><span>Live {record.publishedRevision ? `r${record.publishedRevision}` : '—'}</span>{dirty && <b>Unsaved</b>}</div></div><div className="actions"><button disabled={busy} onClick={() => void validateDraft()}>Validate</button><button disabled={busy || !dirty} onClick={() => void save()}>Save draft</button><button className="catalog-primary" disabled={busy} onClick={() => { if (window.confirm('Publish this draft to the app catalog? It becomes the live version for everyone.')) void save(true); }}>Publish</button><details className="catalog-menu"><summary aria-label="Entry actions">•••</summary><div><button onClick={() => download(`${record.id}.json`, draftWithJSON())}>Export JSON</button><button disabled={busy || editor === 'json'} onClick={duplicate}>Duplicate entry</button><button disabled={busy} onClick={() => void revisions()}>Revision history</button><button disabled={busy || record.status === 'archived'} onClick={() => void lifecycle('archive')}>Archive</button>{['archived','deleted'].includes(record.status) && <button disabled={busy} onClick={() => void restore()}>Restore to draft</button>}</div></details></div></header>
+        <header className="catalog-document-header"><div><h2>{String(document.title || document.name || 'Untitled')}</h2><div className="catalog-document-meta"><span className={`catalog-status status-${record.status}`}>{record.status}</span><code>{record.id}</code><span>Draft r{record.revision}</span><span>Live {record.publishedRevision ? `r${record.publishedRevision}` : '—'}</span>{dirty && <b>Unsaved</b>}</div></div><div className="actions"><button disabled={busy} onClick={() => void validateDraft()}>Validate</button><button disabled={busy || !dirty} onClick={() => void save()}>Save draft</button><button className="catalog-primary" disabled={busy || legacyPublicationBlocked(record, document)} onClick={() => { if (window.confirm('Publish this draft to the app catalog? It becomes the live version for everyone.')) void save(true); }}>Publish</button><details className="catalog-menu"><summary aria-label="Entry actions">•••</summary><div><button onClick={() => download(`${record.id}.json`, draftWithJSON())}>Export JSON</button><button disabled={busy || editor === 'json'} onClick={duplicate}>Duplicate entry</button><button disabled={busy} onClick={() => void revisions()}>Revision history</button><button disabled={busy || record.status === 'archived'} onClick={() => void lifecycle('archive')}>Archive</button>{['archived','deleted'].includes(record.status) && <button disabled={busy} onClick={() => void restore()}>Restore to draft</button>}</div></details></div></header>
+        {kind === 'course' && <details className="catalog-help"><summary>Compatible course delivery · saved draft stays private</summary>
+          <p>Legacy source: {record.publishedRevision ? `r${record.publishedRevision}` : 'not published'}. Candidates add new units and learning metadata to that immutable source. This does not use or publish the saved draft.</p>
+          <label>New units and learning metadata JSON<textarea aria-label="Delivery additions JSON" rows={8} value={deliveryJSON} onChange={e=>setDeliveryJSON(e.target.value)} disabled={busy}/></label>
+          <button disabled={busy || dirty || record.status !== 'published'} onClick={()=>void delivery('prepare')}>Prepare private practice-v1 candidate</button>
+          {(record.deliveries || []).filter(x=>x.profile === 'practice-v1').map(x=><div key={x.revision}><strong>r{x.revision} · {x.state} · source r{x.sourceRevision}</strong><p>Digest: <code>{x.digest}</code></p><button disabled={busy} onClick={()=>void previewDelivery(x.revision)}>Preview immutable candidate</button><button disabled={busy || dirty || record.status !== 'published' || x.state === 'active'} onClick={()=>void delivery(x.activatedAt ? 'rollback':'activate',x.revision)}>{x.activatedAt ? 'Restore approved delivery':'Activate reviewed candidate'}</button></div>)}
+          {record.deliveries?.some(x=>x.profile === 'practice-v1' && x.state === 'active') && <button disabled={busy || dirty} onClick={()=>void delivery('withdraw')}>Withdraw modern delivery</button>}
+          {record.status === 'archived' && record.deliveries?.length ? <button disabled={busy || dirty} onClick={()=>void delivery('restoreApproved')}>Restore approved deliveries</button>:null}
+        </details>}
+        {deliveryPreview && <details className="catalog-help" open><summary>Read-only delivery snapshot</summary><p>The saved draft and editor are unchanged.</p><button onClick={()=>setDeliveryPreview(null)}>Close preview</button><button onClick={()=>download(`${record.id}-delivery-preview.json`,deliveryPreview)}>Export snapshot</button><pre>{JSON.stringify(deliveryPreview,null,2)}</pre></details>}
         <div className="catalog-metrics"><label className="catalog-order" title="Lower numbers appear first in the app catalog. Save draft to apply.">Order<input aria-label="Catalog order" type="number" step="any" disabled={busy} value={sortOrder} onChange={e => { setSortOrder(e.target.value); setDirty(true); setNotice(''); }} /></label><span>{counts?.units} units</span><span>{counts?.lessons} lessons</span><span>{counts?.cards} cards</span><span>{counts?.guides} guides</span><span className="catalog-metrics-date">Saved {stamp(record.updatedAt)}</span></div>
         {validation && <div className={`catalog-validation${validation.valid === false || validation.errors?.length ? ' has-errors' : ''}`} role="status"><strong>{validation.valid === false || validation.errors?.length ? 'Needs attention' : 'Validation passed'}</strong>{[...(validation.errors || []), ...(validation.warnings || [])].map((issue, index) => <p key={index}>{typeof issue === 'string' ? issue : `${issue.path || ''}: ${issue.message || ''}`}</p>)}</div>}
         {history && <div className="catalog-history"><div className="catalog-pane-heading"><strong>Revision history</strong><button onClick={() => setHistory(null)}>×</button></div>{history.map(entry => <div key={entry.revision}><b>r{entry.revision}</b><span>{entry.action}</span><span>{entry.actor}</span><time>{stamp(entry.createdAt)}</time><button disabled={busy} onClick={async () => { setError(''); try { const result = await adminAPI<{ item: CatalogRecord }>(`catalog/${record.id}?revision=${entry.revision}`); download(`${record.id}-r${entry.revision}.json`, result.item.document); } catch (e) { setError((e as Error).message); } }}>Export</button><button disabled={busy} onClick={() => void restore(entry.revision)}>Restore to draft</button></div>)}</div>}

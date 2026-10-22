@@ -62,3 +62,19 @@ test('whole-course cloning remaps starter lesson/prerequisite links but retains 
  assert.deepEqual(copy.learning.starter.lessonIDs,[nextLesson.id]);assert.deepEqual(copy.learning.starter.assessment.lessonIDs,[nextLesson.id]);assert.deepEqual(copy.learning.starter.assessment.forms.a[0].remediationLessonIDs,[nextLesson.id]);
  assert.deepEqual(nextLesson.cards[1].activity.exercise.conceptIDs,['sense-stays']);assert.equal(nextLesson.cards[1].activity.exercise.correctChoiceID,'correct');
 });
+
+
+test('compatible delivery controls never submit the paused saved document or use legacy publication',async()=>{
+ const {legacyPublicationBlocked,deliveryRequest}=await import('../app/admin/catalog-model.ts');
+ const record={id:'spanish-course',kind:'course',status:'published',revision:10,publishedRevision:9,document:{id:'spanish-course',title:'Paused expansion'}};
+ assert.equal(legacyPublicationBlocked(record,record.document),true);
+ const additions={units:[{id:'new-unit'}],learning:{starter:{id:'starter'}}};
+ const body=deliveryRequest(record,'prepare',additions);
+ assert.equal(body.sourceRevision,9);assert.equal(body.expectedRevision,10);assert.equal(body.document,undefined);assert.equal(body.additions,additions);assert.equal(body.profile,'practice-v1');
+ assert.throws(()=>deliveryRequest(record,'prepare',record.document));assert.throws(()=>deliveryRequest(record,'prepare',{...additions,document:record.document}));assert.throws(()=>deliveryRequest(record,'activate',undefined,11));
+ record.deliveries=[{profile:'practice-v1',revision:11,sourceRevision:9,state:'candidate',digest:'hash',title:'Candidate'}];
+ assert.equal(deliveryRequest(record,'activate',undefined,11).deliveryRevision,11);assert.throws(()=>deliveryRequest(record,'rollback',undefined,11));
+ record.deliveries[0].activatedAt=1;assert.equal(deliveryRequest(record,'rollback',undefined,11).deliveryRevision,11);
+ assert.deepEqual(record.document,{id:'spanish-course',title:'Paused expansion'});
+ assert.equal(legacyPublicationBlocked({...record,id:'korean-course',publishedRevision:null,deliveries:[]},{}),false);
+});

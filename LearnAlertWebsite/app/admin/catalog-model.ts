@@ -2,7 +2,8 @@ export type JSONValue = string | number | boolean | null | JSONValue[] | { [key:
 export type JSONObject = { [key: string]: JSONValue };
 export type NodePath = (string | number)[];
 export type CatalogKind = 'course' | 'exam';
-export type CatalogRecord = { id: string; kind: CatalogKind; status: string; revision: number; sortOrder?: number; publishedRevision?: number | null; updatedAt?: number; publishedAt?: number; document: JSONObject };
+export type CatalogDelivery = { profile: string; revision: number; sourceRevision: number; state: string; digest: string; title: string; activatedAt?: number | null };
+export type CatalogRecord = { id: string; kind: CatalogKind; status: string; revision: number; sortOrder?: number; publishedRevision?: number | null; updatedAt?: number; publishedAt?: number; document: JSONObject; deliveries?: CatalogDelivery[] };
 export type CatalogSummary = Omit<CatalogRecord, 'document'> & { title?: string; name?: string; unitCount?: number; lessonCount?: number; cardCount?: number };
 
 export function atPath(value: JSONValue, path: NodePath): JSONValue {
@@ -124,3 +125,23 @@ export const fieldChoices: Record<string, string[]> = {
   kind: ['teach','trace','buildBlock','placeTokens','listenChoose','situation','matchPairs'],
   layout: ['inline','beside','below','besideWithFinal','belowWithFinal'],
 };
+
+export function legacyPublicationBlocked(record: CatalogRecord, document: JSONObject): boolean {
+  const learning = document.learning;
+  return (record.id === 'spanish-course' && record.publishedRevision != null) || !!record.deliveries?.some(x => x.profile === 'practice-v1') || !!(learning && typeof learning === 'object' && !Array.isArray(learning) && learning.starter);
+}
+export function deliveryRequest(record: CatalogRecord, operation: string, additions?: JSONValue, deliveryRevision?: number): JSONObject {
+  if (record.kind !== 'course' || !['prepare','activate','rollback','withdraw','restoreApproved'].includes(operation)) throw new Error('Choose an explicit course delivery action.');
+  if (operation !== 'restoreApproved' && (!record.publishedRevision || record.status !== 'published')) throw new Error('A published legacy source is required.');
+  const body: JSONObject = {operation, profile:'practice-v1', expectedRevision:record.revision};
+  if (operation === 'prepare') {
+    if (!additions || typeof additions !== 'object' || Array.isArray(additions) || !Array.isArray(additions.units) || !additions.units.length || !additions.learning || Object.keys(additions).some(key => !['units','learning'].includes(key))) throw new Error('Provide only new units and learning metadata. The saved draft is not a release source.');
+    body.sourceRevision = record.publishedRevision!; body.additions = additions;
+  }
+  if (operation === 'activate' || operation === 'rollback') {
+    const selected = record.deliveries?.find(x=>x.profile === 'practice-v1' && x.revision === deliveryRevision);
+    if (!selected || (operation === 'rollback' && !selected.activatedAt)) throw new Error('Select a reviewed candidate or a previously activated rollback revision.');
+    body.deliveryRevision = selected.revision;
+  }
+  return body;
+}

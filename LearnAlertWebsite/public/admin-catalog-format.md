@@ -61,3 +61,17 @@ Store prompt/answer/choice image references in promptImageName,answerImageName,o
 7. Archive hides an entry from the offered catalog; deletion can be restored. Existing downloaded device-local copies remain.
 
 Cloudflare Access remains mandatory for every /admin endpoint. Admin/API credentials never belong in exported JSON.
+
+
+## Compatible course releases
+
+The default catalog stays compatible with older clients. `practice-v1` is an explicit delivery profile with required exercise, finite-bank, matching-evidence, route and assessment contracts. Normal Publish does not publish a modern starter or overwrite an existing Spanish legacy release. Keep a paused expansion in its saved draft; do not restore a candidate into that draft to publish it.
+
+Use Compatible course delivery to prepare a private candidate from the named published legacy revision plus `{units, learning}` additions. The server preserves the legacy snapshot and saved draft, validates the full composed course, pins its revision/media, and records an immutable digest. Preview/export that snapshot before explicit activation. Candidate preparation does not expose media. Activation, withdrawal and rollback are separate audited operations with revision-conflict checks. Archived entries with delivery history use Restore approved deliveries, which does not publish the saved draft.
+
+A starter route can contain more than two lessons. The current `pf-sp-a01` assessment still grants only `pf-sp-l01` and `pf-sp-l02`, with two 12-item forms and its reviewed thresholds. Each form must cover the granted lessons' concepts. Assessment access and prerequisite eligibility do not create study-card answers, SRS or mastery. Existing route assignments stay pinned until the learner deliberately adopts an expansion. Preserve published unit, lesson and card IDs and existing exercise targets; new meanings need new IDs. A changed assessment scope needs an explicitly reviewed assessment revision.
+
+Only bind actual uploaded `catalog:UUID` media owned by this course. Owner-unapproved audio remains private. No live audio or paid generation is triggered by preparing or studying a release. Modern clients use profile-separated caches and retain compatible offline content when an update or rollback cannot preserve their assigned route/session.
+
+
+The current route contract keeps existing lesson card membership and existing checkpoint definitions unchanged. Add retrieval variants in new lessons, and extend checkpoint-bearing material in new units. Visual starter units currently use the scoped assessment rather than unit checkpoints; checkpoint-bearing starter routes need a later compatible contract. These bounds prevent a content update from silently adding mastery requirements to an already assigned route.
