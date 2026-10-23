@@ -75,7 +75,7 @@ export function simpleLanguageDocument(source: JSONObject): JSONObject {
   };
   return { id: source.id, title: source.title, language: source.language, flagEmoji: source.flagEmoji || '🌱', levelTag: '', colorHex: source.colorHex || '#75B9DA', summary: '', estimatedHours: 0, outcomes: [], presentation: 'deck_collection',
     units: list(source.units).map(unit => ({id: unit.id, title: unit.title, unitNumber: unit.unitNumber, subtitle: '', colorHex: unit.colorHex || source.colorHex, badgeIcon: 'rectangle.stack',
-      lessons: list(unit.lessons).map(lesson => ({id: lesson.id, title: lesson.nodeType === 'checkpoint' ? 'Review' : lesson.title, lessonNumber: lesson.lessonNumber, subtitle: '', nodeType: 'lesson', estimatedMinutes: 0, cards: expand(lesson, list(lesson.cards).map(regular).filter((card): card is JSONObject=>card!==null))})).filter(lesson => lesson.cards.length)
+      lessons: list(unit.lessons).map(lesson => ({id: lesson.id, title: lesson.nodeType === 'checkpoint' ? 'Review' : lesson.title, lessonNumber: lesson.lessonNumber, subtitle: '', nodeType: 'lesson', estimatedMinutes: 0, ...(lesson.importance !== undefined ? {importance:lesson.importance} : {}), cards: expand(lesson, list(lesson.cards).map(regular).filter((card): card is JSONObject=>card!==null))})).filter(lesson => lesson.cards.length)
     })).filter(unit => unit.lessons.length) };
 }
 

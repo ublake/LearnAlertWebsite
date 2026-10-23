@@ -20,6 +20,8 @@ Unit: id,unitNumber,title,subtitle,colorHex,badgeIcon(SF Symbol name),lessons(le
 
 Lesson: id,lessonNumber,title,subtitle,nodeType,estimatedMinutes,tipNote(optional),cards(courseCard[]). nodeType: lesson,practice,checkpoint,cultural_tip. Display order follows arrays; numbers should match that order.
 
+Language-bundle topic decks are stored as lessons. Optional `importance` is a whole number from 1 to 10 (default 5 when absent). Higher values give that topic more frequent practice within its current level; they do not unlock later levels or alter answer/mastery data. Retain the field when converting legacy courses to `presentation:"deck_collection"`. The topic-deck Fields editor exposes this setting; published changes reach the app through the usual catalog refresh.
+
 Checkpoint: id,title,summary,passingScoreThreshold(number from 0 to 1),questions(courseCard[]),keyConcepts(string[]). It belongs at unit.checkpointQuiz. This is separate from a lesson whose nodeType is checkpoint.
 
 Course card required fields: id,question,options(string[]),correctAnswer,hint,cardType,matchingLeftItems(string[]),matchingRightItems(string[]),optionImageNames(string[]).

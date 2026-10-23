@@ -71,7 +71,7 @@ export function blankCard(course = true): JSONObject {
 }
 export function templateFor(field: string): JSONObject {
   if (field === 'units') return { id: newID('unit'), unitNumber: 1, title: 'New unit', subtitle: '', colorHex: '#75B9DA', badgeIcon: 'book.fill', lessons: [] };
-  if (field === 'lessons') return { id: newID('lesson'), lessonNumber: 1, title: 'New lesson', subtitle: '', nodeType: 'lesson', estimatedMinutes: 5, tipNote: '', cards: [] };
+  if (field === 'lessons') return { id: newID('lesson'), lessonNumber: 1, title: 'New lesson', subtitle: '', nodeType: 'lesson', estimatedMinutes: 5, importance: 5, tipNote: '', cards: [] };
   if (field === 'checkpointQuiz') return { id: newID('checkpoint'), title: 'Checkpoint', summary: '', passingScoreThreshold: 0.8, questions: [], keyConcepts: [] };
   if (field === 'guideTopics') return { title: 'New guide', rule: '', examples: [] };
   if (field === 'guidePresentation') return { showsHangulDiagram: false };

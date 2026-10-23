@@ -451,6 +451,13 @@
           "type": "integer",
           "minimum": 1
         },
+        "importance": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 5,
+          "description": "Relative topic-deck practice frequency within its level. Omit for the default of 5."
+        },
         "title": {
           "type": "string"
         },
