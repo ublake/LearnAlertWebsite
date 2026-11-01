@@ -20,7 +20,7 @@ function withFieldMedia(source: JSONObject): JSONObject {
   }
   attach('prompt','image',source.promptImageName); attach('prompt','audio',source.promptAudioName);
   attach('answer','image',source.answerImageName);
-  list(source.optionImageNames).forEach((value,index)=>attach(`option:${index}`,'image',value));
+  list(source.optionImageNames).forEach((value,index)=>{if(typeof value === 'string' && value.length)attach(`option:${index}`,'image',value);});
   const next: JSONObject = {...source,fieldMedia:fields};
   for (const key of ['promptImageName','promptAudioName','answerImageName','optionImageNames']) delete next[key];
   return next;
