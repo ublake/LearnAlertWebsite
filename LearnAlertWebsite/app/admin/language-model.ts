@@ -80,8 +80,11 @@ export function simpleLanguageDocument(source: JSONObject): JSONObject {
 }
 
 export function languageTree(document: JSONObject): TreeNode {
-  return {path: [], label: text(document.title) || 'Language collection', type: 'Collection', children: list(document.units).flatMap((unit,u) => list(unit.lessons).map((deck,l) => ({
-    path: ['units',u,'lessons',l], label: text(deck.title) || 'Topic deck', type: 'Deck', children: list(deck.cards).map((card,c) => ({path: ['units',u,'lessons',l,'cards',c], label: text(card.question) || (card.promptImageName || obj(obj(card.fieldMedia).prompt).image ? 'Picture question' : 'Card'), type: 'Card', detail: text(card.cardType), children: []}))
-  }))) };
+  const deckNode = (deck: JSONObject, u: number, l: number): TreeNode => ({
+    path: ['units',u,'lessons',l], label: text(deck.title) || 'Topic deck', type: 'Deck',
+    children: list(deck.cards).map((card,c) => ({path: ['units',u,'lessons',l,'cards',c], label: text(card.question) || (card.promptImageName || obj(obj(card.fieldMedia).prompt).image ? 'Image card' : obj(obj(card.fieldMedia).prompt).audio ? 'Audio card' : 'Card'), type: 'Card', detail: text(card.cardType), children: []}))
+  });
+  return {path: [], label: text(document.title) || 'Language', type: 'Language', children: list(document.units).map((unit,u)=>({
+    path: ['units',u],label:text(unit.title) || 'Deck group',type:'Group',children:list(unit.lessons).map((deck,l)=>deckNode(deck,u,l))
+  }))};
 }
-

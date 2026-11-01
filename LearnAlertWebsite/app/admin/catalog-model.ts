@@ -70,8 +70,8 @@ export function blankCard(course = true): JSONObject {
   return { id: newID('card'), question: '', options: course ? ['', '', '', ''] : [], correctAnswer: '', hint: '', cardType: course ? 'multipleChoice' : 'multiple_choice', matchingLeftItems: [], matchingRightItems: [], optionImageNames: [], ...(course ? {correctOptionIndex:0,fieldMedia:{}} : { fieldMedia: {}, sectionName: '' }) };
 }
 export function templateFor(field: string): JSONObject {
-  if (field === 'units') return { id: newID('unit'), unitNumber: 1, title: 'New unit', subtitle: '', colorHex: '#75B9DA', badgeIcon: 'book.fill', lessons: [] };
-  if (field === 'lessons') return { id: newID('lesson'), lessonNumber: 1, title: 'New lesson', subtitle: '', nodeType: 'lesson', estimatedMinutes: 5, importance: 5, tipNote: '', cards: [] };
+  if (field === 'units') return { id: newID('unit'), unitNumber: 1, title: 'New deck group', subtitle: '', colorHex: '#75B9DA', badgeIcon: 'book.fill', lessons: [] };
+  if (field === 'lessons') return { id: newID('lesson'), lessonNumber: 1, title: 'New topic deck', subtitle: '', nodeType: 'lesson', estimatedMinutes: 0, cards: [] };
   if (field === 'checkpointQuiz') return { id: newID('checkpoint'), title: 'Checkpoint', summary: '', passingScoreThreshold: 0.8, questions: [], keyConcepts: [] };
   if (field === 'guideTopics') return { title: 'New guide', rule: '', examples: [] };
   if (field === 'guidePresentation') return { showsHangulDiagram: false };
@@ -80,7 +80,7 @@ export function templateFor(field: string): JSONObject {
   return blankCard();
 }
 export function blankDocument(kind: CatalogKind): JSONObject {
-  return kind === 'course' ? { id: newID('course'), title: 'New language collection', language: '', flagEmoji: '🌱', levelTag: '', colorHex: '#75B9DA', summary: '', estimatedHours: 0, outcomes: [], units: [], presentation:'deck_collection' } : { id: newID('exam'), name: 'Untitled exam deck', category: 'Exam Prep', subcategory: '', description: '', colorHex: '#75B9DA', deckType: 'Mixed', cards: [] };
+  return kind === 'course' ? { id: newID('course'), title: 'New language', language: '', flagEmoji: '🌱', levelTag: '', colorHex: '#75B9DA', summary: '', estimatedHours: 0, outcomes: [], units: [], presentation:'deck_collection' } : { id: newID('exam'), name: 'Untitled exam deck', category: 'Exam Prep', subcategory: '', description: '', colorHex: '#75B9DA', deckType: 'Mixed', cards: [] };
 }
 export type TreeNode = { path: NodePath; label: string; type: string; detail?: string; children: TreeNode[] };
 export function documentTree(document: JSONObject, kind: CatalogKind): TreeNode {

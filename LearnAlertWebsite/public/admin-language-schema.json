@@ -1,0 +1,411 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learnalertapp.com/admin-language-schema.json",
+  "title": "LearnAlert independent language topic decks",
+  "description": "Current authoring format. Backend publication additionally validates semantic answers, actual media ownership and app compatibility.",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "language",
+    "flagEmoji",
+    "colorHex",
+    "presentation",
+    "units"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "language": {
+      "type": "string",
+      "minLength": 1
+    },
+    "flagEmoji": {
+      "type": "string"
+    },
+    "colorHex": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
+    },
+    "presentation": {
+      "const": "deck_collection"
+    },
+    "units": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/group"
+      }
+    }
+  },
+  "additionalProperties": true,
+  "not": {
+    "anyOf": [
+      {
+        "required": [
+          "learning"
+        ]
+      },
+      {
+        "required": [
+          "guides"
+        ]
+      },
+      {
+        "required": [
+          "guidePresentation"
+        ]
+      }
+    ]
+  },
+  "$defs": {
+    "media": {
+      "type": "object",
+      "properties": {
+        "image": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "audio": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "card": {
+      "type": "object",
+      "required": [
+        "id",
+        "cardType"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cardType": {
+          "enum": [
+            "multipleChoice",
+            "multiple_choice",
+            "matching",
+            "fillBlank",
+            "fill_blank",
+            "vocabulary",
+            "tapReveal",
+            "tap_reveal",
+            "images"
+          ]
+        },
+        "question": {
+          "type": "string"
+        },
+        "correctAnswer": {
+          "type": "string"
+        },
+        "hint": {
+          "type": "string"
+        },
+        "options": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "type": "string"
+          }
+        },
+        "correctOptionIndex": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 3
+        },
+        "matchingLeftItems": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "string"
+          }
+        },
+        "matchingRightItems": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "string"
+          }
+        },
+        "fieldMedia": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/media"
+          }
+        },
+        "promptImageName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "answerImageName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "promptAudioName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "activity"
+            ]
+          },
+          {
+            "required": [
+              "vocabularyItem"
+            ]
+          },
+          {
+            "required": [
+              "grammarNote"
+            ]
+          },
+          {
+            "required": [
+              "explanation"
+            ]
+          }
+        ]
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "cardType": {
+                "enum": [
+                  "multipleChoice",
+                  "multiple_choice"
+                ]
+              }
+            },
+            "required": [
+              "cardType"
+            ]
+          },
+          "then": {
+            "required": [
+              "options",
+              "correctOptionIndex"
+            ],
+            "properties": {
+              "options": {
+                "minItems": 2
+              },
+              "correctOptionIndex": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "cardType": {
+                "const": "matching"
+              }
+            },
+            "required": [
+              "cardType"
+            ]
+          },
+          "then": {
+            "required": [
+              "matchingLeftItems",
+              "matchingRightItems"
+            ],
+            "properties": {
+              "matchingLeftItems": {
+                "minItems": 2
+              },
+              "matchingRightItems": {
+                "minItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "cardType": {
+                "const": "images"
+              }
+            },
+            "required": [
+              "cardType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "question": {
+                "const": ""
+              },
+              "correctAnswer": {
+                "const": ""
+              },
+              "hint": {
+                "const": ""
+              },
+              "options": {
+                "maxItems": 0
+              },
+              "matchingLeftItems": {
+                "maxItems": 0
+              },
+              "matchingRightItems": {
+                "maxItems": 0
+              },
+              "fieldMedia": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "prompt",
+                    "answer"
+                  ]
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "image": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "anyOf": [
+              {
+                "required": [
+                  "promptImageName"
+                ],
+                "properties": {
+                  "promptImageName": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              {
+                "required": [
+                  "fieldMedia"
+                ],
+                "properties": {
+                  "fieldMedia": {
+                    "required": [
+                      "prompt"
+                    ],
+                    "properties": {
+                      "prompt": {
+                        "required": [
+                          "image"
+                        ],
+                        "properties": {
+                          "image": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "deck": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "lessonNumber",
+        "nodeType",
+        "cards"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lessonNumber": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "nodeType": {
+          "const": "lesson"
+        },
+        "cards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/card"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "group": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "unitNumber",
+        "lessons"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unitNumber": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "lessons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/deck"
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

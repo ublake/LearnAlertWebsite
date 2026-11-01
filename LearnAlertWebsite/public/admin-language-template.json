@@ -13,7 +13,7 @@
     {
       "id": "es-topics",
       "unitNumber": 1,
-      "title": "Topic decks",
+      "title": "Everyday Spanish",
       "subtitle": "",
       "colorHex": "#E05A47",
       "badgeIcon": "rectangle.stack",
@@ -38,6 +38,55 @@
               ],
               "correctAnswer": "Hello",
               "correctOptionIndex": 0,
+              "fieldMedia": {}
+            },
+            {
+              "id": "es-greetings-please",
+              "cardType": "vocabulary",
+              "question": "Por favor",
+              "correctAnswer": "Please",
+              "hint": "",
+              "options": [],
+              "matchingLeftItems": [],
+              "matchingRightItems": [],
+              "fieldMedia": {}
+            },
+            {
+              "id": "es-greetings-match",
+              "cardType": "matching",
+              "question": "Match the greetings",
+              "correctAnswer": "",
+              "options": [],
+              "matchingLeftItems": [
+                "Hola",
+                "Adiós"
+              ],
+              "matchingRightItems": [
+                "Hello",
+                "Goodbye"
+              ],
+              "fieldMedia": {}
+            },
+            {
+              "id": "es-greetings-blank",
+              "cardType": "fillBlank",
+              "question": "Buenos ___",
+              "options": [
+                "días",
+                "gracias",
+                "adiós",
+                "hola"
+              ],
+              "correctAnswer": "días",
+              "correctOptionIndex": 0,
+              "fieldMedia": {}
+            },
+            {
+              "id": "es-greetings-reveal",
+              "cardType": "tapReveal",
+              "question": "Gracias",
+              "correctAnswer": "Thank you",
+              "options": [],
               "fieldMedia": {}
             }
           ]
