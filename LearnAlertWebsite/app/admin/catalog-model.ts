@@ -127,7 +127,7 @@ export function countDocument(document: JSONObject) {
 export const friendly = (key: string) => key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
 export const fieldChoices: Record<string, string[]> = {
   nodeType: ['lesson','practice','checkpoint','cultural_tip'],
-  cardType: ['multipleChoice','tapReveal','fillBlank','matching','vocabulary','listening','listeningWrite','hangulTrace','hangulBuild','tokenPlacement','images','multiple_choice','tap_reveal','fill_blank'],
+  cardType: ['multipleChoice','tapReveal','fillBlank','matching','vocabulary','listening','listeningWrite','hangulTrace','hangulBuild','tokenPlacement','images','multiple_choice','tap_reveal','fill_blank','drag_answer'],
   kind: ['teach','trace','buildBlock','placeTokens','listenChoose','situation','matchPairs'],
   layout: ['inline','beside','below','besideWithFinal','belowWithFinal'],
 };

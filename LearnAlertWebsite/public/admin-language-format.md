@@ -23,6 +23,7 @@ Supported `cardType` values:
 | `fillBlank` | A prompt with `___`; use options and a correct index for choice-based recall, or no options for typed recall. |
 | `vocabulary` | Prompt and answer for a vocabulary flashcard. |
 | `tapReveal` | Prompt and answer for a general reveal card. |
+| `drag_answer` | 2–30 ordered tokens in `options`, each up to 160 trimmed characters or image/audio-only. Store the correct order; the app shuffles it. No `correctOptionIndex`, matching pairs or answer attachments. |
 | `images` | One front image and an optional back image. No text, audio, hints, choices or pairs. |
 
 Native snake-case aliases `multiple_choice`, `fill_blank`, and `tap_reveal` are also understood. Prefer the template's camel-case values for language JSON. Anki cards are imported through the app's importer; they are not authored in this workspace.
@@ -33,7 +34,7 @@ Text is optional when the same prompt, answer, choice, or pair item contains rea
 
 Upload PNG/JPEG images or MP3/M4A/WAV recordings. Images allow up to 10 MB each; audio allows up to 20 MB each. Reference uploaded assets as `catalog:UUID` owned by the same language, or preserve a supplied bundled asset name from an existing export.
 
-Use `fieldMedia` keys `prompt`, `answer`, `hint`, `option:0`…`option:3`, `left:0`…`left:19`, and `right:0`…`right:19`. A field is `{ "image": "catalog:UUID", "audio": "catalog:UUID" }`; omit unused parts. Image cards use only prompt/answer image fields. Never invent UUIDs, claim generated descriptions are actual uploads, or reference private/foreign assets.
+Use `fieldMedia` keys `prompt`, `answer`, `hint`, `option:0`…`option:3` (`option:0`…`option:29` for Drag to Answer), `left:0`…`left:19`, and `right:0`…`right:19`. A field is `{ "image": "catalog:UUID", "audio": "catalog:UUID" }`; omit unused parts. Image cards use only prompt/answer image fields. Never invent UUIDs, claim generated descriptions are actual uploads, or reference private/foreign assets.
 
 The editor converts old `promptImageName`, `promptAudioName`, `answerImageName`, and `optionImageNames` aliases into `fieldMedia` when changing an attachment, so stale aliases cannot override new uploads.
 
@@ -46,3 +47,7 @@ Older course documents open read-only. Export the original or choose Preview con
 ## AI instructions
 
 Return one complete JSON language document without Markdown. Start from an exported current-format document or the template. Keep stable language, group, topic, and card IDs; assign fresh IDs only to additions. Use concise accurate prompts, meaningful distractors, repeated vocabulary in different directions, and genuine uploaded media. Keep groups decorative and decks independent. Do not reintroduce retired course features or alter learner progress. Run validation and review the draft before explicit publication.
+
+## Drag to Answer
+
+Use every token once in the canonical `options` order. Duplicated words are allowed. Learners tap or drag tiles, submit once, then continue; they cannot resubmit the same attempt. `correctAnswer` is derived display text. Put image/audio attachments on each token’s `option:index` slot; media must follow its token whenever the editor reorders or removes entries.

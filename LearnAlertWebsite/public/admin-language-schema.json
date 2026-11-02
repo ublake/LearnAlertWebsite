@@ -103,7 +103,8 @@
             "vocabulary",
             "tapReveal",
             "tap_reveal",
-            "images"
+            "images",
+            "drag_answer"
           ]
         },
         "question": {
@@ -117,7 +118,7 @@
         },
         "options": {
           "type": "array",
-          "maxItems": 4,
+          "maxItems": 30,
           "items": {
             "type": "string"
           }
@@ -339,6 +340,54 @@
                 }
               }
             ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "cardType": {
+                "const": "drag_answer"
+              }
+            },
+            "required": [
+              "cardType"
+            ]
+          },
+          "then": {
+            "required": [
+              "options"
+            ],
+            "properties": {
+              "options": {
+                "minItems": 2,
+                "maxItems": 30,
+                "items": {
+                  "type": "string",
+                  "maxLength": 160
+                }
+              },
+              "correctOptionIndex": {
+                "type": "null"
+              },
+              "matchingLeftItems": {
+                "maxItems": 0
+              },
+              "matchingRightItems": {
+                "maxItems": 0
+              },
+              "fieldMedia": {
+                "propertyNames": {
+                  "pattern": "^(prompt|hint|option:([0-9]|[12][0-9]))$"
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "options": {
+                "maxItems": 4
+              }
+            }
           }
         }
       ]

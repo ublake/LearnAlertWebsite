@@ -8,7 +8,7 @@
 4. Click Create draft. The site validates cards, uploads referenced files, converts filenames to stored media IDs, and opens the deck editor.
 5. Review the deck. Save changes keeps a draft private. Publish deck makes it available to browse/download. Imported media follows the deck’s visibility.
 
-The downloadable template includes all five text card types and needs no image files. Image-only cards use the sixth type, images, and require an image file. Import one deck at a time. All six types can be mixed in one deck.
+The downloadable template includes all six text card types and needs no image files. Image-only cards use the seventh type, images, and require an image file. Import one deck at a time. All seven types can be mixed in one deck. Imported Anki templates are a separate developer-only publishing path, not an additional authored type in this template.
 
 ## Deck fields
 
@@ -30,12 +30,12 @@ Do not include origin, sourceCommunityID, or sourcePremadeID from an exported/do
 | Field | Required / default | Format and limit |
 | --- | --- | --- |
 | id | Recommended; generated if omitted | Unique, non-empty string up to 64 characters. Use an explicit unique ID on every card to avoid collisions. |
-| cardType | Required | Exactly vocabulary, tap_reveal, multiple_choice, matching, fill_blank, or images |
+| cardType | Required | Exactly vocabulary, tap_reveal, multiple_choice, matching, fill_blank, drag_answer, or images |
 | question | Optional when prompt media exists | Text up to 5000 characters, or empty with a prompt image/audio. Matching instructions are optional. Images cards keep text empty. |
 | correctAnswer | Text answer, optional with answer media | Up to 10000 characters. Quiz cards use correctOptionIndex; matching/images leave this empty. |
 | hint | Optional; empty text | Up to 2000 characters; must be empty for images |
 | sectionName | Optional; empty text | Up to 120 characters; groups cards into a section |
-| options | Required for multiple_choice | 2–4 strings. Each may be empty when the corresponding option has an image/audio. |
+| options | Required for multiple_choice or drag_answer | Quiz: 2–4 strings. Drag to Answer: 2–30 strings in correct order, each up to 160 characters. Each may be empty when the corresponding option has an image/audio. |
 | correctOptionIndex | Required for media-only/duplicate quiz choices | Zero-based correct choice index. Old text decks may still use an exact unique correctAnswer. |
 | fieldMedia | Optional | Field-keyed images/audio, described below. Text is optional when that field has media. |
 | matchingLeftItems | Required for matching | Array of 2–20 strings, each up to 5000 characters. An empty item requires image/audio in its left:index slot. Otherwise omit or use []. |
@@ -142,6 +142,14 @@ Put a blank such as ___ in question and the missing word or phrase in correctAns
 }
 ```
 
+### Drag to Answer (drag_answer)
+
+Provide `options` as 2–30 tokens in the **correct answer order**. Each token is up to 160 trimmed characters; an empty token needs image/audio in its matching `option:index` field. Repeated words are allowed. The app shuffles presentation only, lets learners tap or drag tokens into a flowing answer, and accepts one submission per attempt. Use every token once; do not add distractors. Omit `correctOptionIndex`, matching pairs and answer attachments. `correctAnswer` is a display string derived from the tokens; it is not a second answer key.
+
+```json
+{"id":"order-1","cardType":"drag_answer","question":"She is a lawyer.","options":["Ella","es","abogada."],"correctAnswer":"Ella es abogada."}
+```
+
 ### Image only (images)
 
 Use a required front image and an optional back image, with no question, answer, hint, choices, matching pairs, option images, or audio. Omit answerImage for a single-image review card; include it to reveal a second picture on the back. Supply both actual image files alongside the JSON when using both sides.
@@ -164,7 +172,7 @@ Use a required front image and an optional back image, with no question, answer,
 - answerImage attaches an answer/back image to vocabulary, tap_reveal, fill_blank, or images cards.
 - promptAudio attaches one audio recording to the question. It can be used on any text card type, together with an image if needed. Image-only cards do not support audio.
 - optionImages attaches images to quiz choices. Use null for an absent image. Choices with images/audio need no text; use correctOptionIndex.
-- fieldMedia adds images/audio to prompt, answer, hint, option:0…option:3, left:0…left:19, and right:0…right:19. Each entry is {"image":"filename.png","audio":"filename.wav"}; omit either part. Indices align with the options/matching arrays. For imports use filenames; the saved editor/API uses imageID/audioID instead.
+- fieldMedia adds images/audio to prompt, answer, hint, option:0…option:3 (option:0…option:29 for drag_answer), left:0…left:19, and right:0…right:19. Each entry is {"image":"filename.png","audio":"filename.wav"}; omit either part. Indices align with the options/matching arrays. For imports use filenames; the saved editor/API uses imageID/audioID instead.
 - A fill_blank answer with only media uses reveal and self-assessment, since there is no answer text to type.
 - Image cards keep their image-only layout; no audio, text, hints, or choices. Video, PDFs, and remote image URLs are unsupported.
 
@@ -232,14 +240,14 @@ This needs cell.png, nucleus.mp3, ribosome.png, nucleus.png, and membrane.jpg. T
 
 The importer converts promptImage, answerImage, promptAudio, and optionImages into promptImageID, answerImageID, promptAudioID, and optionImageIDs after uploading. The same applies to fieldMedia imageID/audioID: imports use image/audio filenames, saved cards use IDs. Those internal IDs belong to saved decks and the editor; do not use them in a new import. Existing saved card JSON uses a cards array, while the New deck importer expects a full deck object.
 
-## Complete text-only deck — all five text types
+## Complete text-only deck — all six text types
 
 This is the downloadable template. It imports without selecting media files.
 
 ```json
 {
   "name": "Cell Biology — Text Card Types",
-  "description": "Five examples covering the text card types.",
+  "description": "Six examples covering the text card types.",
   "categoryTag": "Science",
   "colorHex": "#5B70E0",
   "deckType": "Mixed",
@@ -299,6 +307,19 @@ This is the downloadable template. It imports without selecting media files.
       "correctAnswer": "cell membrane",
       "hint": "It surrounds the cell.",
       "sectionName": "Cell biology"
+    },
+    {
+      "id": "order-1",
+      "cardType": "drag_answer",
+      "question": "She is a lawyer.",
+      "correctAnswer": "Ella es abogada.",
+      "options": [
+        "Ella",
+        "es",
+        "abogada."
+      ],
+      "hint": "Put the words in sentence order.",
+      "sectionName": "Spanish"
     }
   ]
 }
@@ -320,7 +341,7 @@ This is the downloadable template. It imports without selecting media files.
 | Invalid JSON | Remove Markdown fences/comments/trailing commas; use double quotes. |
 | Missing referenced file | Select the exact filename named by promptImage, answerImage, promptAudio, or optionImages, or remove that reference. |
 | Duplicate filename | Rename one file and update its reference. |
-| Invalid card type | Use one of the six exact lowercase cardType values. |
+| Invalid card type | Use one of the seven exact lowercase cardType values. |
 | Invalid image card | Supply one promptImage file, optionally one answerImage file, and remove question/answer/hint text, choices, pairs, option images, and audio. |
 | Invalid/duplicate card ID | Use a distinct non-empty string on every card, at most 64 characters. |
 | Invalid multiple-choice card | Supply 2–4 choices with text or media, and a valid correctOptionIndex. |
@@ -334,6 +355,6 @@ This is the downloadable template. It imports without selecting media files.
 Copy the following prompt and add your topic, intended level, number of cards, and desired card types.
 
 ```text
-Generate one original LearnAlert deck as valid JSON only. Use name, description, categoryTag, colorHex (#RRGGBB), deckType, and cards (1–500). Each card needs a unique string id and cardType: vocabulary, tap_reveal, multiple_choice, matching, fill_blank, or images. Text fields question/correctAnswer/hint are optional when that field has an image/audio, with limits 5000/10000/2000 characters. Quiz options contain 2–4 strings, possibly empty for media-only choices; set correctOptionIndex to the zero-based right answer. Matching uses equal arrays matchingLeftItems/matchingRightItems with 2–20 entries, possibly empty when the same slot has media. Image cards require promptImage and optionally answerImage, and keep all text, audio, choices and pairs empty.
+Generate one original LearnAlert deck as valid JSON only. Use name, description, categoryTag, colorHex (#RRGGBB), deckType, and cards (1–500). Each card needs a unique string id and cardType: vocabulary, tap_reveal, multiple_choice, matching, fill_blank, drag_answer, or images. Drag to Answer uses options in canonical answer order with 2–30 tokens (up to 160 characters each); no correctOptionIndex or answer attachment. The app shuffles only while solving. Text fields question/correctAnswer/hint are optional when that field has an image/audio, with limits 5000/10000/2000 characters. Quiz options contain 2–4 strings, possibly empty for media-only choices; set correctOptionIndex to the zero-based right answer. Matching uses equal arrays matchingLeftItems/matchingRightItems with 2–20 entries, possibly empty when the same slot has media. Image cards require promptImage and optionally answerImage, and keep all text, audio, choices and pairs empty.
 Attach media with fieldMedia: {"prompt":{"image":"front.png","audio":"question.wav"},"answer":{"audio":"answer.wav"},"hint":{"image":"clue.png"},"option:0":{"audio":"choice.wav"},"left:0":{"image":"left.png"},"right:0":{"audio":"right.wav"}}. Only use slots presented by that card type. Every required prompt/answer/choice/pair item needs text or media. Legacy promptImage, answerImage, promptAudio, optionImages filenames remain supported. Provide actual PNG/JPEG or MP3/M4A/WAV files separately with matching plain filenames; do not invent media IDs, paths, URLs or base64. Images max 10 MB, audio max 20 MB, total 100 MB/1000 files per deck. Keep JSON under 1 MB. Media-only fill_blank answers are revealed for self-assessment. Do not include account/ownership/status/counter fields. If unable to generate media, put production descriptions outside the JSON.
 ```

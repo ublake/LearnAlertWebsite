@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type FormEvent, type TouchEvent } from 'react';
+import { remapTokenFields, tokenAnswer } from './ordered-tokens';
 
 export type FieldMedia = { imageID?: string | null; audioID?: string | null };
 export type EditableCard = {
@@ -37,7 +38,7 @@ function MediaField({ label, value, media, onText, onMedia, onUpload, imageOnly 
   }
   return <div className="admin-media-field">
     <div className="admin-media-label"><label>{label}</label>{!directUploads && <button type="button" aria-label={`Attachments for ${label}`} aria-expanded={open} onClick={() => setOpen(!open)}>＋ Attach</button>}</div>
-    {!imageOnly && <textarea aria-label={label} rows={1} maxLength={label === 'Hint' ? 2000 : label === 'Answer' ? 10000 : 5000} placeholder="Text, image or audio" value={value} onChange={e => onText(e.target.value)} onTouchStart={e => setStart({ x: e.touches[0].clientX, y: e.touches[0].clientY })} onTouchEnd={end} />}
+    {!imageOnly && <textarea aria-label={label} rows={1} maxLength={label.startsWith('Token ') ? 160 : label === 'Hint' ? 2000 : label === 'Answer' ? 10000 : 5000} placeholder="Text, image or audio" value={value} onChange={e => onText(e.target.value)} onTouchStart={e => setStart({ x: e.touches[0].clientX, y: e.touches[0].clientY })} onTouchEnd={end} />}
     {(open || imageOnly || directUploads) && <div className={`admin-media-tools${directUploads ? ' admin-choice-uploads' : ''}`}>
       <label className={directUploads ? 'admin-upload-button' : undefined}>{media.imageID ? 'Replace image' : 'Add image'}<input type="file" aria-label={`${media.imageID ? 'Replace' : 'Add'} image for ${label}`} accept=".png,.jpg,.jpeg" onChange={e => { if (e.target.files?.[0]) onUpload(e.target.files[0], 'imageID'); e.target.value = ''; }} /></label>
       {!imageOnly && <label className={directUploads ? 'admin-upload-button' : undefined}>{media.audioID ? 'Replace audio' : 'Add audio'}<input type="file" aria-label={`${media.audioID ? 'Replace' : 'Add'} audio for ${label}`} accept=".mp3,.m4a,.wav" onChange={e => { if (e.target.files?.[0]) onUpload(e.target.files[0], 'audioID'); e.target.value = ''; }} /></label>}
@@ -55,16 +56,16 @@ export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish, onDirty
   const [hints, setHints] = useState(new Set(deck.cards.filter(card => card.hint || cardMedia(card, 'hint').imageID || cardMedia(card, 'hint').audioID).map(card => card.id)));
   useEffect(() => { onDirtyChange?.(dirty); return () => onDirtyChange?.(false); }, [dirty, onDirtyChange]);
   const [selectedCard, setSelectedCard] = useState(0), [cardSearch, setCardSearch] = useState('');
-  const types = ['tap_reveal', 'vocabulary', 'multiple_choice', 'matching', 'fill_blank', 'images'];
+  const types = ['tap_reveal', 'vocabulary', 'multiple_choice', 'matching', 'fill_blank', 'images', 'drag_answer'];
   function edit(index: number, patch: Partial<EditableCard>) { setCards(current => current.map((card, i) => i === index ? { ...card, ...patch } : card)); setDirty(true); }
   function changeCardType(index: number, cardType: string) {
     const card = cards[index];
     const all = { ...card.fieldMedia, prompt: cardMedia(card, 'prompt'), answer: cardMedia(card, 'answer') };
-    const keep = Object.fromEntries(Object.entries(all).filter(([key]) => key === 'prompt' || key === 'hint' && cardType !== 'images' || key === 'answer' && !['multiple_choice','matching'].includes(cardType)).map(([key, media]) => [key, cardType === 'images' ? { imageID: media.imageID } : media]));
+    const keep = Object.fromEntries(Object.entries(all).filter(([key]) => key === 'prompt' || key === 'hint' && cardType !== 'images' || key === 'answer' && !['multiple_choice','matching','drag_answer'].includes(cardType)).map(([key, media]) => [key, cardType === 'images' ? { imageID: media.imageID } : media]));
     edit(index, { cardType, question: cardType === 'images' ? '' : card.question, correctAnswer: cardType === 'images' ? '' : card.correctAnswer,
       hint: cardType === 'images' ? '' : card.hint, fieldMedia: keep, answerImageID: keep.answer?.imageID ?? null,
       promptAudioID: cardType === 'images' ? null : card.promptAudioID,
-      options: cardType === 'multiple_choice' ? ['', ''] : [], optionImageIDs: [], correctOptionIndex: cardType === 'multiple_choice' ? 0 : null,
+      options: ['multiple_choice','drag_answer'].includes(cardType) ? ['', ''] : [], optionImageIDs: [], correctOptionIndex: cardType === 'multiple_choice' ? 0 : null,
       matchingLeftItems: cardType === 'matching' ? ['', ''] : [], matchingRightItems: cardType === 'matching' ? ['', ''] : [] });
   }
   function setMedia(index: number, key: string, patch: FieldMedia) {
@@ -104,6 +105,13 @@ export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish, onDirty
     const resized = (items: string[] = []) => Array.from({ length: count }, (_, i) => items[i] ?? '');
     edit(index, { ...(matching ? { matchingLeftItems: resized(card.matchingLeftItems), matchingRightItems: resized(card.matchingRightItems) } : { options: resized(card.options), optionImageIDs: (card.optionImageIDs ?? []).slice(0, count), correctOptionIndex: Math.min(card.correctOptionIndex ?? Math.max(0, card.options?.indexOf(card.correctAnswer) ?? 0), count - 1) }), fieldMedia: Object.fromEntries(Object.entries(card.fieldMedia ?? {}).filter(([key]) => allowed.has(key))) });
   }
+  function orderedTokens(index: number, order: number[]) {
+    const card = cards[index], options = order.map(i => card.options?.[i] ?? '');
+    const existing = {...card.fieldMedia};
+    (card.options ?? []).forEach((_,i) => { existing[`option:${i}`] = cardMedia(card,`option:${i}`); });
+    const fieldMedia = remapTokenFields(existing,order);
+    edit(index,{options,fieldMedia,correctOptionIndex:null,correctAnswer:tokenAnswer(options,fieldMedia),optionImageIDs:options.map((_,i)=>fieldMedia[`option:${i}`]?.imageID ?? null)});
+  }
   return <section className="admin-detail" aria-label="Edit deck"><form onSubmit={(event: FormEvent) => { event.preventDefault(); void submit(false); }}>
     <header><h2>{deck.status === 'draft' ? 'Draft deck' : 'Edit deck'}</h2><div className="actions"><button type="submit" disabled={saving || uploading}>{saving ? 'Saving…' : 'Save changes'}</button>{onPublish && <button type="button" disabled={saving || uploading} onClick={() => void submit(true)}>Publish deck</button>}<button type="button" disabled={saving || uploading} onClick={() => { if (!dirty || window.confirm('Discard unsaved deck changes?')) onClose(); }}>Cancel editing</button></div></header>
     {error && <p role="alert" className="admin-message admin-error">{error}</p>}{uploading && <p role="status">Uploading attachment…</p>}
@@ -123,6 +131,10 @@ export function DeckEditor({ deck, onSave, onClose, onUpload, onPublish, onDirty
         {card.cardType === 'multiple_choice' || card.cardType === 'fill_blank' && !!card.options?.length ? <>
           <div className="admin-media-label"><strong>Choices</strong><select aria-label="Choice count" value={card.options?.length || 2} onChange={e => choices(index, Number(e.target.value), false)}>{[2,3,4].map(n => <option key={n}>{n}</option>)}</select></div>
           {(card.options ?? ['', '']).map((text, n) => <div className="admin-choice-field" key={n}><input type="radio" name={`correct-${card.id}`} aria-label={`Choice ${n + 1} is correct`} checked={(card.correctOptionIndex ?? card.options?.indexOf(card.correctAnswer)) === n} onChange={() => edit(index, { correctOptionIndex: n, correctAnswer: card.options?.[n] ?? '' })} />{mediaField(card, index, `option:${n}`, `Choice ${n + 1}`, text, value => { const options = [...(card.options ?? ['', ''])]; options[n] = value; edit(index, { options, ...((card.correctOptionIndex ?? 0) === n ? {correctAnswer:value} : {}) }); })}</div>)}
+        </> : card.cardType === 'drag_answer' ? <>
+          <small>Arrange tokens in the correct answer order. Study shuffles them; every token is used once.</small>
+          {(card.options ?? []).map((text,n)=><div className="admin-choice-field" key={n}><strong>{n+1}</strong>{mediaField(card,index,`option:${n}`,`Token ${n+1}`,text,value=>{const options=[...(card.options ?? [])];options[n]=value;edit(index,{options,correctOptionIndex:null,correctAnswer:tokenAnswer(options,card.fieldMedia ?? {})});})}<div className="actions"><button type="button" aria-label={`Move token ${n+1} up`} disabled={n===0} onClick={()=>{const order=(card.options ?? []).map((_,i)=>i);[order[n-1],order[n]]=[order[n],order[n-1]];orderedTokens(index,order);}}>↑</button><button type="button" aria-label={`Move token ${n+1} down`} disabled={n===(card.options?.length ?? 0)-1} onClick={()=>{const order=(card.options ?? []).map((_,i)=>i);[order[n],order[n+1]]=[order[n+1],order[n]];orderedTokens(index,order);}}>↓</button><button type="button" aria-label={`Remove token ${n+1}`} disabled={(card.options?.length ?? 0)<=2} onClick={()=>orderedTokens(index,(card.options ?? []).map((_,i)=>i).filter(i=>i!==n))}>×</button></div></div>)}
+          <button type="button" disabled={(card.options?.length ?? 0)>=30} onClick={()=>orderedTokens(index,[...(card.options ?? []).map((_,i)=>i),-1])}>＋ Token</button>
         </> : card.cardType === 'matching' ? <>
           <div className="admin-media-label"><strong>Pairs</strong><input aria-label="Pair count" type="number" min={2} max={20} value={card.matchingLeftItems?.length || 2} onChange={e => { const count = Number(e.target.value); if (count >= 2 && count <= 20) choices(index, count, true); }} /></div>
           {(card.matchingLeftItems ?? ['', '']).map((text, n) => <div className="admin-editor-grid" key={n}>{mediaField(card, index, `left:${n}`, `Left ${n + 1}`, text, value => { const items = [...(card.matchingLeftItems ?? ['', ''])]; items[n] = value; edit(index, { matchingLeftItems: items }); })}{mediaField(card, index, `right:${n}`, `Right ${n + 1}`, card.matchingRightItems?.[n] ?? '', value => { const items = [...(card.matchingRightItems ?? ['', ''])]; items[n] = value; edit(index, { matchingRightItems: items }); })}</div>)}

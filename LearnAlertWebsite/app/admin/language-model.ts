@@ -1,4 +1,5 @@
 import type { JSONObject, JSONValue, TreeNode } from './catalog-model';
+import { tokenAnswer } from './ordered-tokens';
 
 const list = (value: JSONValue | undefined) => Array.isArray(value) ? value as JSONObject[] : [];
 const obj = (value: JSONValue | undefined): JSONObject => value && typeof value === 'object' && !Array.isArray(value) ? value : {};
@@ -48,6 +49,11 @@ export function simpleLanguageDocument(source: JSONObject): JSONObject {
     if(card.promptImageName || card.promptAudioName)fieldMedia.prompt={...obj(fieldMedia.prompt),...(card.promptImageName?{image:card.promptImageName}:{}),...(card.promptAudioName?{audio:card.promptAudioName}:{})};
     if(card.answerImageName)fieldMedia.answer={...obj(fieldMedia.answer),image:card.answerImageName};
     if(Array.isArray(card.optionImageNames))card.optionImageNames.forEach((image,i)=>{if(image)fieldMedia[`option:${i}`]={...obj(fieldMedia[`option:${i}`]),image};});
+    if (cardType === 'drag_answer') {
+      const tokens=options.map(text);
+      if(tokens.length<2||tokens.length>30)return null;
+      return {id:card.id,question,options:tokens,correctAnswer:tokenAnswer(tokens,fieldMedia),cardType,correctOptionIndex:null,matchingLeftItems:[],matchingRightItems:[],fieldMedia};
+    }
     if (exercise.format === 'pictureChoice') {
       const pictures = list(exercise.pictures); index = pictures.findIndex(picture => picture.id === exercise.correctChoiceID);
       if (index < 0 || pictures.length < 2) return null;

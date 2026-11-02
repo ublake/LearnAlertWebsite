@@ -88,6 +88,22 @@
               "correctAnswer": "Thank you",
               "options": [],
               "fieldMedia": {}
+            },
+            {
+              "id": "spanish-order-example",
+              "cardType": "drag_answer",
+              "question": "She is a lawyer.",
+              "correctAnswer": "Ella es abogada.",
+              "options": [
+                "Ella",
+                "es",
+                "abogada."
+              ],
+              "correctOptionIndex": null,
+              "hint": "",
+              "matchingLeftItems": [],
+              "matchingRightItems": [],
+              "fieldMedia": {}
             }
           ]
         }

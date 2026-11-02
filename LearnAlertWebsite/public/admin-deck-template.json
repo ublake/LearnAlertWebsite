@@ -1,6 +1,6 @@
 {
   "name": "Cell Biology — Text Card Types",
-  "description": "Five examples covering the text card types.",
+  "description": "Six examples covering the text card types.",
   "categoryTag": "Science",
   "colorHex": "#5B70E0",
   "deckType": "Mixed",
@@ -60,6 +60,19 @@
       "correctAnswer": "cell membrane",
       "hint": "It surrounds the cell.",
       "sectionName": "Cell biology"
+    },
+    {
+      "id": "order-1",
+      "cardType": "drag_answer",
+      "question": "She is a lawyer.",
+      "correctAnswer": "Ella es abogada.",
+      "options": [
+        "Ella",
+        "es",
+        "abogada."
+      ],
+      "hint": "Put the words in sentence order.",
+      "sectionName": "Spanish"
     }
   ]
 }
