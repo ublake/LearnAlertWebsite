@@ -2,10 +2,13 @@ export async function adminAPI<T = { success: boolean }>(path: string, init?: Re
   const response = await fetch(`/admin/api/${path}`, { ...init, headers: { 'Content-Type': 'application/json', ...init?.headers }, cache: 'no-store' });
   return responseJSON<T>(response);
 }
+export class AdminAPIError extends Error {
+  constructor(message: string, public readonly status: number) { super(message); this.name = 'AdminAPIError'; }
+}
 async function responseJSON<T>(response: Response): Promise<T> {
   if (!response.headers.get('content-type')?.includes('application/json')) throw new Error('Your admin session expired. Reload to sign in again.');
   const data = await response.json() as T & { error?: { message?: string } };
-  if (!response.ok) throw new Error(data.error?.message || 'Request failed.');
+  if (!response.ok) throw new AdminAPIError(data.error?.message || 'Request failed.', response.status);
   return data;
 }
 export async function uploadAdminMedia(deckId: string, file: File): Promise<string> {
